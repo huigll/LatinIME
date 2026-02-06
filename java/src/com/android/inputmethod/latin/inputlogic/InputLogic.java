@@ -28,6 +28,7 @@ import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.inputmethod.CorrectionInfo;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodSubtype;
 
 import com.android.inputmethod.compat.SuggestionSpanUtils;
 import com.android.inputmethod.event.Event;
@@ -53,13 +54,16 @@ import com.android.inputmethod.latin.settings.SettingsValues;
 import com.android.inputmethod.latin.settings.SettingsValuesForSuggestion;
 import com.android.inputmethod.latin.settings.SpacingAndPunctuations;
 import com.android.inputmethod.latin.suggestions.SuggestionStripViewAccessor;
+import com.carbit.inappkeyboard.keyboard.PinyinDecoder;
 import com.android.inputmethod.latin.utils.AsyncResultHolder;
 import com.android.inputmethod.latin.utils.InputTypeUtils;
 import com.android.inputmethod.latin.utils.RecapitalizeStatus;
 import com.android.inputmethod.latin.utils.StatsUtils;
 import com.android.inputmethod.latin.utils.TextRange;
+import com.android.inputmethod.latin.utils.SubtypeLocaleUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -92,6 +96,11 @@ public final class InputLogic {
     /* package */ final WordComposer mWordComposer;
     public final RichInputConnection mConnection;
     private final RecapitalizeStatus mRecapitalizeStatus = new RecapitalizeStatus();
+
+    private PinyinDecoder mPinyinDecoder;
+    private final StringBuilder mPinyinComposing = new StringBuilder();
+    private List<String> mPinyinCandidates = new ArrayList<>();
+    private SuggestedWords mPinyinSuggestedWords = SuggestedWords.getEmptyInstance();
 
     private int mDeleteCount;
     private long mLastKeyTime;
@@ -140,6 +149,7 @@ public final class InputLogic {
         mEnteredText = null;
         mWordBeingCorrectedByCursor = null;
         mConnection.onStartInput();
+        resetPinyinState();
         if (!mWordComposer.getTypedWord().isEmpty()) {
             // For messaging apps that offer send button, the IME does not get the opportunity
             // to capture the last word. This block should capture those uncommitted words.
@@ -206,6 +216,7 @@ public final class InputLogic {
             StatsUtils.onWordCommitUserTyped(
                     mWordComposer.getTypedWord(), mWordComposer.isBatchMode());
         }
+        resetPinyinState();
         resetComposingState(true /* alsoResetLastComposedWord */);
         mInputLogicHandler.reset();
     }
@@ -219,6 +230,167 @@ public final class InputLogic {
         mInputLogicHandler = InputLogicHandler.NULL_HANDLER;
         inputLogicHandler.destroy();
         mDictionaryFacilitator.closeDictionaries();
+    }
+
+    private boolean isPinyinSubtype() {
+        final InputMethodSubtype subtype = mLatinIME.getCurrentSubtype();
+        if (subtype == null) {
+            return false;
+        }
+        final Locale locale = SubtypeLocaleUtils.getSubtypeLocale(subtype);
+        return "zh".equals(locale.getLanguage());
+    }
+
+    private void ensurePinyinDecoder() {
+        if (mPinyinDecoder == null) {
+            mPinyinDecoder = new PinyinDecoder(mLatinIME);
+        }
+    }
+
+    private void resetPinyinState() {
+        if (mPinyinComposing.length() > 0) {
+            mConnection.finishComposingText();
+        }
+        mPinyinComposing.setLength(0);
+        mPinyinCandidates = new ArrayList<>();
+        mPinyinSuggestedWords = SuggestedWords.getEmptyInstance();
+    }
+
+    private void updatePinyinComposingAndSuggestions() {
+        if (mPinyinComposing.length() == 0) {
+            mPinyinCandidates = new ArrayList<>();
+            mPinyinSuggestedWords = SuggestedWords.getEmptyInstance();
+            mSuggestedWords = mPinyinSuggestedWords;
+            mSuggestionStripViewAccessor.setNeutralSuggestionStrip();
+            return;
+        }
+
+        ensurePinyinDecoder();
+        mConnection.setComposingText(mPinyinComposing, 1);
+
+        mPinyinCandidates = mPinyinDecoder.candidates(mPinyinComposing.toString(), 10);
+        final ArrayList<SuggestedWordInfo> suggestions = new ArrayList<>();
+        final SuggestedWordInfo typedInfo = new SuggestedWordInfo(
+                mPinyinComposing.toString(),
+                "" /* prevWordsContext */,
+                SuggestedWordInfo.MAX_SCORE,
+                SuggestedWordInfo.KIND_TYPED,
+                Dictionary.DICTIONARY_USER_TYPED,
+                SuggestedWordInfo.NOT_AN_INDEX,
+                SuggestedWordInfo.NOT_A_CONFIDENCE);
+        suggestions.add(typedInfo);
+        int score = SuggestedWordInfo.MAX_SCORE - 1;
+        for (final String candidate : mPinyinCandidates) {
+            suggestions.add(new SuggestedWordInfo(
+                    candidate,
+                    "" /* prevWordsContext */,
+                    score--,
+                    SuggestedWordInfo.KIND_CORRECTION,
+                    Dictionary.DICTIONARY_APPLICATION_DEFINED,
+                    SuggestedWordInfo.NOT_AN_INDEX,
+                    SuggestedWordInfo.NOT_A_CONFIDENCE));
+        }
+
+        mPinyinSuggestedWords = new SuggestedWords(
+                suggestions,
+                null /* rawSuggestions */,
+                typedInfo,
+                false /* typedWordValid */,
+                false /* willAutoCorrect */,
+                false /* isObsoleteSuggestions */,
+                SuggestedWords.INPUT_STYLE_TYPING,
+                SuggestedWords.NOT_A_SEQUENCE_NUMBER);
+        mSuggestedWords = mPinyinSuggestedWords;
+        mSuggestionStripViewAccessor.showSuggestionStrip(mPinyinSuggestedWords);
+    }
+
+    private String choosePinyinCandidate(final int index) {
+        if (index < 0 || index >= mPinyinCandidates.size()) {
+            return mPinyinComposing.toString();
+        }
+        ensurePinyinDecoder();
+        final String chosen = mPinyinDecoder.choose(index);
+        return (chosen == null || chosen.isEmpty()) ? mPinyinCandidates.get(index) : chosen;
+    }
+
+    private void commitPinyinText(final String text) {
+        mConnection.commitText(text, 1);
+        mConnection.finishComposingText();
+        mEnteredText = text;
+        mWordBeingCorrectedByCursor = null;
+        mSpaceState = SpaceState.NONE;
+        resetPinyinState();
+        mSuggestionStripViewAccessor.setNeutralSuggestionStrip();
+    }
+
+    private static boolean isPinyinCodePoint(final int codePoint) {
+        return (codePoint >= 'a' && codePoint <= 'z')
+                || (codePoint >= 'A' && codePoint <= 'Z')
+                || codePoint == '\'';
+    }
+
+    private InputTransaction handlePinyinEvent(final SettingsValues settingsValues,
+            @Nonnull final Event event, final int keyboardShiftMode, final LatinIME.UIHandler handler) {
+        if (!isPinyinSubtype()) {
+            return null;
+        }
+
+        final InputTransaction inputTransaction = new InputTransaction(settingsValues,
+                event, SystemClock.uptimeMillis(), mSpaceState, keyboardShiftMode);
+
+        final int keyCode = event.mKeyCode;
+        final int codePoint = event.mCodePoint;
+
+        if (keyCode == Constants.CODE_DELETE) {
+            if (mPinyinComposing.length() == 0) {
+                return null;
+            }
+            mConnection.beginBatchEdit();
+            mPinyinComposing.setLength(mPinyinComposing.length() - 1);
+            updatePinyinComposingAndSuggestions();
+            mConnection.endBatchEdit();
+            return inputTransaction;
+        }
+
+        if (keyCode == Constants.CODE_SPACE) {
+            if (mPinyinComposing.length() == 0) {
+                return null;
+            }
+            mConnection.beginBatchEdit();
+            final String commit = mPinyinCandidates.isEmpty()
+                    ? mPinyinComposing.toString()
+                    : choosePinyinCandidate(0);
+            commitPinyinText(commit);
+            mConnection.endBatchEdit();
+            inputTransaction.setDidAffectContents();
+            inputTransaction.requireShiftUpdate(InputTransaction.SHIFT_UPDATE_NOW);
+            return inputTransaction;
+        }
+
+        if (codePoint > 0 && isPinyinCodePoint(codePoint)) {
+            mConnection.beginBatchEdit();
+            mPinyinComposing.appendCodePoint(Character.toLowerCase(codePoint));
+            updatePinyinComposingAndSuggestions();
+            mConnection.endBatchEdit();
+            return inputTransaction;
+        }
+
+        if (mPinyinComposing.length() > 0) {
+            mConnection.beginBatchEdit();
+            final String commit = mPinyinCandidates.isEmpty()
+                    ? mPinyinComposing.toString()
+                    : choosePinyinCandidate(0);
+            commitPinyinText(commit);
+            mConnection.endBatchEdit();
+            inputTransaction.setDidAffectContents();
+            inputTransaction.requireShiftUpdate(InputTransaction.SHIFT_UPDATE_NOW);
+        }
+
+        return null;
+    }
+
+    public boolean isPinyinComposing() {
+        return mPinyinComposing.length() > 0;
     }
 
     /**
@@ -275,6 +447,19 @@ public final class InputLogic {
             final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
         final SuggestedWords suggestedWords = mSuggestedWords;
         final String suggestion = suggestionInfo.mWord;
+        if (isPinyinSubtype() && mPinyinComposing.length() > 0) {
+            final Event event = Event.createSuggestionPickedEvent(suggestionInfo);
+            final InputTransaction inputTransaction = new InputTransaction(settingsValues,
+                    event, SystemClock.uptimeMillis(), mSpaceState, keyboardShiftState);
+            mConnection.beginBatchEdit();
+            final int index = mPinyinCandidates.indexOf(suggestion);
+            final String commit = index >= 0 ? choosePinyinCandidate(index) : suggestion;
+            commitPinyinText(commit);
+            mConnection.endBatchEdit();
+            inputTransaction.setDidAffectContents();
+            inputTransaction.requireShiftUpdate(InputTransaction.SHIFT_UPDATE_NOW);
+            return inputTransaction;
+        }
         // If this is a punctuation picked from the suggestion strip, pass it to onCodeInput
         if (suggestion.length() == 1 && suggestedWords.isPunctuationSuggestions()) {
             // We still want to log a suggestion click.
@@ -438,6 +623,11 @@ public final class InputLogic {
             @Nonnull final Event event, final int keyboardShiftMode,
             final int currentKeyboardScriptId, final LatinIME.UIHandler handler) {
         mWordBeingCorrectedByCursor = null;
+        final InputTransaction pinyinTransaction =
+                handlePinyinEvent(settingsValues, event, keyboardShiftMode, handler);
+        if (pinyinTransaction != null) {
+            return pinyinTransaction;
+        }
         final Event processedEvent = mWordComposer.processEvent(event);
         final InputTransaction inputTransaction = new InputTransaction(settingsValues,
                 processedEvent, SystemClock.uptimeMillis(), mSpaceState,
@@ -1899,6 +2089,7 @@ public final class InputLogic {
      */
     private void resetComposingState(final boolean alsoResetLastComposedWord) {
         mWordComposer.reset();
+        resetPinyinState();
         if (alsoResetLastComposedWord) {
             mLastComposedWord = LastComposedWord.NOT_A_COMPOSED_WORD;
         }

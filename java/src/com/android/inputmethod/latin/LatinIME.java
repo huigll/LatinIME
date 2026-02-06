@@ -1595,10 +1595,12 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         final boolean shouldShowSuggestionCandidates =
                 currentSettingsValues.mInputAttributes.mShouldShowSuggestions
                 && currentSettingsValues.isSuggestionsEnabledPerUserSettings();
+        final boolean shouldForceShowForPinyin = mInputLogic.isPinyinComposing();
         final boolean shouldShowSuggestionsStripUnlessPassword = shouldShowImportantNotice
                 || currentSettingsValues.mShowsVoiceInputKey
                 || shouldShowSuggestionCandidates
-                || currentSettingsValues.isApplicationSpecifiedCompletionsOn();
+                || currentSettingsValues.isApplicationSpecifiedCompletionsOn()
+                || shouldForceShowForPinyin;
         final boolean shouldShowSuggestionsStrip = shouldShowSuggestionsStripUnlessPassword
                 && !currentSettingsValues.mInputAttributes.mIsPasswordField;
         mSuggestionStripView.updateVisibility(shouldShowSuggestionsStrip, isFullscreenMode());
@@ -1624,6 +1626,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
         if (currentSettingsValues.isSuggestionsEnabledPerUserSettings()
                 || currentSettingsValues.isApplicationSpecifiedCompletionsOn()
+                || shouldForceShowForPinyin
                 // We should clear the contextual strip if there is no suggestion from dictionaries.
                 || noSuggestionsFromDictionaries) {
             mSuggestionStripView.setSuggestions(suggestedWords,
@@ -1653,6 +1656,10 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         // Cache the auto-correction in accessibility code so we can speak it if the user
         // touches a key that will insert it.
         AccessibilityUtils.getInstance().setAutoCorrection(suggestedWords);
+    }
+
+    public InputMethodSubtype getCurrentSubtype() {
+        return mRichImm.getCurrentSubtype().getRawSubtype();
     }
 
     // Called from {@link SuggestionStripView} through the {@link SuggestionStripView#Listener}
