@@ -24,6 +24,8 @@
 #include "com_android_inputmethod_latin_DicTraverseSession.h"
 #include "defines.h"
 
+extern "C" bool registerPinyinDecoderJni(JNIEnv *env);
+
 /*
  * Returns the JNI version on success, -1 on failure.
  */
@@ -53,6 +55,10 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     }
     if (!latinime::register_ProximityInfo(env)) {
         AKLOGE("ERROR: ProximityInfo native registration failed");
+        return -1;
+    }
+    if (!registerPinyinDecoderJni(env)) {
+        AKLOGE("ERROR: PinyinDecoder native registration failed");
         return -1;
     }
     /* success -- return valid version number */

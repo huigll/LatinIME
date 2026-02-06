@@ -1,2 +1,3 @@
 rootProject.name = "LatinIME"
 include(":app")
+include(":keyboard")

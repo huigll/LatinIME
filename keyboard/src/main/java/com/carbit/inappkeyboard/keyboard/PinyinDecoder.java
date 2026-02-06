@@ -22,9 +22,9 @@ public class PinyinDecoder implements IPinyinDecoder {
 
     static {
         try {
-            System.loadLibrary("jni_pinyinime");
+            System.loadLibrary("jni_latinime");
         } catch (Throwable t) {
-            Log.e("PinyinDecoder", "Failed to load native library jni_pinyinime", t);
+            Log.e("PinyinDecoder", "Failed to load native library jni_latinime", t);
         }
     }
 
@@ -63,8 +63,13 @@ public class PinyinDecoder implements IPinyinDecoder {
         }
 
         boolean ok = false;
+        final int resId = resolvePinyinDictResId(context);
+        if (resId == 0) {
+            Log.e("PinyinDecoder", "dict_pinyin resource not found");
+            return;
+        }
         try {
-            AssetFileDescriptor afd = context.getResources().openRawResourceFd(R.raw.dict_pinyin);
+            AssetFileDescriptor afd = context.getResources().openRawResourceFd(resId);
             ok = nativeImOpenDecoderFd(
                     afd.getFileDescriptor(),
                     afd.getStartOffset(),
@@ -79,7 +84,7 @@ public class PinyinDecoder implements IPinyinDecoder {
             if (!dictFile.exists() || dictFile.length() == 0) {
                 try {
                     android.content.res.Resources res = context.getResources();
-                    java.io.InputStream input = res.openRawResource(R.raw.dict_pinyin);
+                    java.io.InputStream input = res.openRawResource(resId);
                     java.io.OutputStream output = new java.io.FileOutputStream(dictFile);
                     byte[] buf = new byte[8192];
                     int n;
@@ -113,6 +118,15 @@ public class PinyinDecoder implements IPinyinDecoder {
         } else {
             Log.e("PinyinDecoder", "Failed to initialize pinyin decoder");
         }
+    }
+
+    public static int resolvePinyinDictResId(Context context) {
+        if (context == null) return 0;
+        return context.getResources().getIdentifier(
+                "dict_pinyin",
+                "raw",
+                context.getPackageName()
+        );
     }
 
     @Override

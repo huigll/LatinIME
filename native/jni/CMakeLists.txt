@@ -16,27 +16,9 @@ set(LATIN_IME_JNI_SRC
     jni_common.cpp
 )
 
-add_library(jni_latinime SHARED
-    ${LATIN_IME_JNI_SRC}
-    ${LATIN_IME_CORE_SRC}
-)
-
-target_include_directories(jni_latinime PRIVATE
-    .
-    src
-)
-
-find_library(log-lib log)
-find_library(android-lib android)
-
-target_link_libraries(jni_latinime
-    ${log-lib}
-    ${android-lib}
-)
-
 set(PINYINIME_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../keyboard/src/main/cpp/pinyinime")
 
-add_library(jni_pinyinime SHARED
+set(PINYINIME_SRC
     ${PINYINIME_SRC_DIR}/pinyin_jni.cpp
     ${PINYINIME_SRC_DIR}/share/dictbuilder.cpp
     ${PINYINIME_SRC_DIR}/share/dictlist.cpp
@@ -56,11 +38,23 @@ add_library(jni_pinyinime SHARED
     ${PINYINIME_SRC_DIR}/share/sync.cpp
 )
 
-target_include_directories(jni_pinyinime PRIVATE
+add_library(jni_latinime SHARED
+    ${LATIN_IME_JNI_SRC}
+    ${LATIN_IME_CORE_SRC}
+    ${PINYINIME_SRC}
+)
+
+target_include_directories(jni_latinime PRIVATE
+    .
+    src
     ${PINYINIME_SRC_DIR}
     ${PINYINIME_SRC_DIR}/include
 )
 
-target_link_libraries(jni_pinyinime
+find_library(log-lib log)
+find_library(android-lib android)
+
+target_link_libraries(jni_latinime
     ${log-lib}
+    ${android-lib}
 )

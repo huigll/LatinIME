@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -193,8 +194,11 @@ public class PinyinNativeApiInstrumentedTest {
             }
         }
 
+        final int resId = PinyinDecoder.resolvePinyinDictResId(ctx);
+        Assume.assumeTrue("dict_pinyin resource not found", resId != 0);
+
         try {
-            AssetFileDescriptor afd = ctx.getResources().openRawResourceFd(R.raw.dict_pinyin);
+            AssetFileDescriptor afd = ctx.getResources().openRawResourceFd(resId);
             boolean ok = PinyinDecoder.nativeImOpenDecoderFd(
                     afd.getFileDescriptor(),
                     afd.getStartOffset(),
@@ -207,7 +211,7 @@ public class PinyinNativeApiInstrumentedTest {
             // Fallback when resource is compressed (openRawResourceFd throws).
             File dictFile = new File(ctx.getFilesDir(), "dict_pinyin.dat");
             if (!dictFile.exists() || dictFile.length() == 0) {
-                try (java.io.InputStream input = ctx.getResources().openRawResource(R.raw.dict_pinyin);
+                try (java.io.InputStream input = ctx.getResources().openRawResource(resId);
                      java.io.OutputStream output = new java.io.FileOutputStream(dictFile)) {
                     byte[] buf = new byte[8192];
                     int n;

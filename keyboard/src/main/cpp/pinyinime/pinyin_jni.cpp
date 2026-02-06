@@ -110,16 +110,10 @@ static int registerFileDescriptorOffsets(JNIEnv* env) {
     return gFileDescriptorOffsets.mDescriptor != nullptr;
 }
 
-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/) {
-    JNIEnv* env = nullptr;
-    if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
-        return JNI_ERR;
-    }
-
+extern "C" bool registerPinyinDecoderJni(JNIEnv* env) {
     if (!registerFileDescriptorOffsets(env)) {
         LOGE("Failed to find FileDescriptor descriptor field");
-        return JNI_ERR;
+        return false;
     }
-
-    return JNI_VERSION_1_6;
+    return true;
 }
