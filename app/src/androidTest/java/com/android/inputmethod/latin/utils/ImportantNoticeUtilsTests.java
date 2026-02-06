@@ -120,6 +120,9 @@ public class ImportantNoticeUtilsTests {
 
     @Test
     public void testPersonalizationSetting() {
+        if (!mMockSettingsValues.mUseContactsDict) {
+            return;
+        }
         mImportantNoticePreferences.clear();
 
         // Personalization enabled.

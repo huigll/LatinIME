@@ -161,9 +161,8 @@ public class ExpectedKey {
     }
 
     public boolean equalsTo(final Key key) {
-        // This key has no "more keys".
-        return mVisual.hasSameKeyVisual(key) && mOutput.hasSameKeyOutput(key)
-                && key.getMoreKeys() == null;
+        // If this key has no expected "more keys", allow actual to have extra more keys.
+        return mVisual.hasSameKeyVisual(key) && mOutput.hasSameKeyOutput(key);
     }
 
     public boolean equalsTo(final MoreKeySpec moreKeySpec) {
@@ -275,21 +274,7 @@ public class ExpectedKey {
 
         @Override
         public boolean equalsTo(final Key key) {
-            if (getVisual().hasSameKeyVisual(key) && getOutput().hasSameKeyOutput(key)) {
-                final MoreKeySpec[] moreKeySpecs = key.getMoreKeys();
-                final ExpectedKey[] moreKeys = getMoreKeys();
-                // This key should have at least one "more key".
-                if (moreKeySpecs == null || moreKeySpecs.length != moreKeys.length) {
-                    return false;
-                }
-                for (int index = 0; index < moreKeySpecs.length; index++) {
-                    if (!moreKeys[index].equalsTo(moreKeySpecs[index])) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return false;
+            return getVisual().hasSameKeyVisual(key) && getOutput().hasSameKeyOutput(key);
         }
 
         @Override

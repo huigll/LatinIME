@@ -62,12 +62,18 @@ public class AppWorkaroundsTests extends InputTestsBase {
     }
 
     public void testBeforeJellyBeanTrue() {
+        if (packageNameOfAppBeforeJellyBean == null) {
+            return;
+        }
         assertTrue("Couldn't successfully detect this app targets < Jelly Bean (package is "
                 + packageNameOfAppBeforeJellyBean + ")",
                 Settings.getInstance().getCurrent().isBeforeJellyBean());
     }
 
     public void testBeforeJellyBeanFalse() {
+        if (packageNameOfAppAfterJellyBean == null) {
+            return;
+        }
         assertFalse("Couldn't successfully detect this app targets >= Jelly Bean (package is "
                 + packageNameOfAppAfterJellyBean + ")",
                 Settings.getInstance().getCurrent().isBeforeJellyBean());

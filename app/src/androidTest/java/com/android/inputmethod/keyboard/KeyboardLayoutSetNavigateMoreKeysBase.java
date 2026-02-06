@@ -25,6 +25,7 @@ import com.android.inputmethod.keyboard.internal.MoreKeySpec;
 import com.android.inputmethod.latin.R;
 import com.android.inputmethod.latin.RichInputMethodManager;
 import com.android.inputmethod.latin.common.Constants;
+import com.android.inputmethod.latin.utils.RunInLocale;
 import com.android.inputmethod.latin.utils.SubtypeLocaleUtils;
 
 import java.util.Arrays;
@@ -109,12 +110,24 @@ abstract class KeyboardLayoutSetNavigateMoreKeysBase extends KeyboardLayoutSetTe
             if (expectedLabelResId == ExpectedMoreKey.NO_LABEL) {
                 assertEquals(tag + " label " + index, null, actualMoreKeys[index].mLabel);
             } else {
-                final CharSequence expectedLabel = getContext().getText(expectedLabelResId);
+                final CharSequence expectedLabel = getLabelForSubtype(expectedLabelResId, subtype);
                 assertEquals(tag + " label " + index, expectedLabel, actualMoreKeys[index].mLabel);
             }
             final int expectedIconId = expectedMoreKeys[index].mIconId;
             assertEquals(tag + " icon " + index, expectedIconId, actualMoreKeys[index].mIconId);
         }
+    }
+
+    private CharSequence getLabelForSubtype(final int labelResId,
+            final InputMethodSubtype subtype) {
+        final RunInLocale<CharSequence> getText = new RunInLocale<CharSequence>() {
+            @Override
+            protected CharSequence job(final android.content.res.Resources res) {
+                return res.getText(labelResId);
+            }
+        };
+        return getText.runInLocale(getContext().getResources(),
+                SubtypeLocaleUtils.getSubtypeLocale(subtype));
     }
 
     private void doTestNavigationMoreKeysOf(final int code, final InputMethodSubtype subtype,

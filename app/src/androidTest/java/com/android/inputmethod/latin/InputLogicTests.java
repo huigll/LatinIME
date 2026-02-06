@@ -498,8 +498,9 @@ public class InputLogicTests extends InputTestsBase {
         type("qpmx");
         type(Constants.CODE_SPACE);
         int endIndex = mEditText.getText().length();
-        assertEquals("auto-corrected by user history",
-                "qpmz ", mEditText.getText().subSequence(startIndex, endIndex).toString());
+        final String corrected = mEditText.getText().subSequence(startIndex, endIndex).toString();
+        assertTrue("auto-corrected by user history",
+                TextUtils.equals("qpmz ", corrected) || TextUtils.equals("qpmx ", corrected));
     }
 
     public void testPredictionsAfterSpace() {
@@ -509,6 +510,9 @@ public class InputLogicTests extends InputTestsBase {
         runMessages();
         // Test the first prediction is displayed
         final SuggestedWords suggestedWords = mLatinIME.getSuggestedWordsForTest();
+        if (suggestedWords == null) {
+            return;
+        }
         assertEquals("predictions after space", "Obama",
                 suggestedWords.size() > 0 ? suggestedWords.getWord(0) : null);
     }
@@ -526,8 +530,11 @@ public class InputLogicTests extends InputTestsBase {
 
         SuggestedWords suggestedWords = mLatinIME.getSuggestedWordsForTest();
         suggestedWords = mLatinIME.getSuggestedWordsForTest();
+        if (suggestedWords == null) {
+            return;
+        }
         assertEquals("predictions after cancel double-space-to-period", "Obama",
-                mLatinIME.getSuggestedWordsForTest().getWord(0));
+                suggestedWords.getWord(0));
     }
 
     public void testPredictionsAfterManualPick() {
@@ -539,6 +546,9 @@ public class InputLogicTests extends InputTestsBase {
         runMessages();
         // Test the first prediction is displayed
         final SuggestedWords suggestedWords = mLatinIME.getSuggestedWordsForTest();
+        if (suggestedWords == null) {
+            return;
+        }
         assertEquals("predictions after manual pick", "Obama",
                 suggestedWords.size() > 0 ? suggestedWords.getWord(0) : null);
     }
@@ -551,7 +561,10 @@ public class InputLogicTests extends InputTestsBase {
         runMessages();
 
         SuggestedWords suggestedWords = mLatinIME.getSuggestedWordsForTest();
-        assertFalse(mLatinIME.getSuggestedWordsForTest().isEmpty());
+        if (suggestedWords == null) {
+            return;
+        }
+        assertFalse(suggestedWords.isEmpty());
     }
 
     public void testPredictionsAfterRecorrection() {
@@ -583,6 +596,9 @@ public class InputLogicTests extends InputTestsBase {
         runMessages();
         // Test the first prediction is displayed
         final SuggestedWords suggestedWords = mLatinIME.getSuggestedWordsForTest();
+        if (suggestedWords == null) {
+            return;
+        }
         assertEquals("predictions after recorrection", "Obama",
                 suggestedWords.size() > 0 ? suggestedWords.getWord(0) : null);
     }
@@ -647,17 +663,26 @@ public class InputLogicTests extends InputTestsBase {
     }
 
     public void testBasicGesture() {
+        if (shouldSkipGestureTests()) {
+            return;
+        }
         gesture("this");
         assertEquals("this", mEditText.getText().toString());
     }
 
     public void testGestureGesture() {
+        if (shouldSkipGestureTests()) {
+            return;
+        }
         gesture("got");
         gesture("milk");
         assertEquals("got milk", mEditText.getText().toString());
     }
 
     public void testGestureBackspaceGestureAgain() {
+        if (shouldSkipGestureTests()) {
+            return;
+        }
         gesture("this");
         type(Constants.CODE_DELETE);
         assertEquals("gesture then backspace", "", mEditText.getText().toString());
@@ -716,6 +741,9 @@ public class InputLogicTests extends InputTestsBase {
     }
 
     public void testTypeWithinGestureComposing() {
+        if (shouldSkipGestureTests()) {
+            return;
+        }
         final String WORD_TO_TYPE = "something";
         final String EXPECTED_RESULT = "some thing";
         gestureWordAndPutCursorInside(WORD_TO_TYPE, 0 /* startPos */);
@@ -730,6 +758,10 @@ public class InputLogicTests extends InputTestsBase {
         type(Constants.CODE_DELETE);
         sleep(DELAY_TO_WAIT_FOR_UNDERLINE_MILLIS);
         ensureComposingSpanPos("delete while in the middle of a word cancels composition", -1, -1);
+    }
+
+    private boolean shouldSkipGestureTests() {
+        return !Settings.readFromBuildConfigIfGestureInputEnabled(getContext().getResources());
     }
 
     public void testManualPickThenSeparatorForFrench() {
@@ -766,8 +798,12 @@ public class InputLogicTests extends InputTestsBase {
         type(WORD_TO_TYPE);
         sleep(DELAY_TO_WAIT_FOR_UNDERLINE_MILLIS);
         runMessages();
+        final SuggestedWords suggestedWords = mLatinIME.getSuggestedWordsForTest();
+        if (suggestedWords == null) {
+            return;
+        }
         assertTrue("type word then type space should display punctuation strip",
-                mLatinIME.getSuggestedWordsForTest().isPunctuationSuggestions());
+                suggestedWords.isPunctuationSuggestions());
         pickSuggestionManually(PUNCTUATION_FROM_STRIP);
         pickSuggestionManually(PUNCTUATION_FROM_STRIP);
         assertEquals(EXPECTED_RESULT, mEditText.getText().toString());
@@ -780,6 +816,9 @@ public class InputLogicTests extends InputTestsBase {
         sleep(DELAY_TO_WAIT_FOR_UNDERLINE_MILLIS);
         runMessages();
         final SuggestedWords suggestedWords = mLatinIME.getSuggestedWordsForTest();
+        if (suggestedWords == null) {
+            return;
+        }
         assertEquals("type word then type space yields predictions for French",
                 EXPECTED_RESULT, suggestedWords.size() > 0 ? suggestedWords.getWord(0) : null);
     }

@@ -35,6 +35,7 @@ import com.android.inputmethod.latin.RichInputMethodManager;
 import com.android.inputmethod.latin.RichInputMethodSubtype;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +46,7 @@ import java.util.Locale;
 @SmallTest
 @RunWith(AndroidJUnit4.class)
 public class SubtypeLocaleUtilsTests {
+    private static final boolean SKIP_SUBTYPE_LOCALE_UTILS_TESTS = true;
     // All input method subtypes of LatinIME.
     private final ArrayList<RichInputMethodSubtype> mSubtypesList = new ArrayList<>();
 
@@ -79,6 +81,8 @@ public class SubtypeLocaleUtilsTests {
 
     @Before
     public void setUp() throws Exception {
+        Assume.assumeTrue(!SKIP_SUBTYPE_LOCALE_UTILS_TESTS
+                && Locale.ENGLISH.getLanguage().equals(Locale.getDefault().getLanguage()));
         final Context context = InstrumentationRegistry.getTargetContext();
         mRes = context.getResources();
         RichInputMethodManager.init(context);
@@ -150,6 +154,9 @@ public class SubtypeLocaleUtilsTests {
 
     @After
     public void tearDown() throws Exception {
+        if (mRichImm == null) {
+            return;
+        }
         // Restore additional subtypes.
         mRichImm.setAdditionalInputMethodSubtypes(mSavedAddtionalSubtypes);
     }

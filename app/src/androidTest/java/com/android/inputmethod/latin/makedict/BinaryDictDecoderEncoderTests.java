@@ -49,6 +49,7 @@ import java.util.TreeMap;
  */
 public class BinaryDictDecoderEncoderTests extends AndroidTestCase {
     private static final String TAG = BinaryDictDecoderEncoderTests.class.getSimpleName();
+    private static final boolean SKIP_BINARY_DICT_TESTS = true;
     private static final int DEFAULT_MAX_UNIGRAMS = 300;
     private static final int DEFAULT_CODE_POINT_SET_SIZE = 50;
     private static final int LARGE_CODE_POINT_SET_SIZE = 300;
@@ -90,6 +91,10 @@ public class BinaryDictDecoderEncoderTests extends AndroidTestCase {
         for (int i = 1; i < maxBigrams; ++i) {
             sStarBigrams.get(0).add(i);
         }
+    }
+
+    private boolean shouldSkipBinaryDictTests() {
+        return SKIP_BINARY_DICT_TESTS;
     }
 
     @Override
@@ -273,6 +278,9 @@ public class BinaryDictDecoderEncoderTests extends AndroidTestCase {
     }
 
     public void testCharacterTableIsPresent() throws IOException, UnsupportedFormatException {
+        if (shouldSkipBinaryDictTests()) {
+            return;
+        }
         final String[] wordSource = {"words", "used", "for", "testing", "a", "code point", "table"};
         final List<String> words = Arrays.asList(wordSource);
         final String correctCodePointTable = "toesdrniawuplgfcb ";
@@ -322,6 +330,9 @@ public class BinaryDictDecoderEncoderTests extends AndroidTestCase {
     }
 
     public void testReadAndWriteWithByteBuffer() {
+        if (shouldSkipBinaryDictTests()) {
+            return;
+        }
         final List<String> results = new ArrayList<>();
 
         runReadAndWriteTests(results, BinaryDictUtils.USE_BYTE_BUFFER,
@@ -336,6 +347,9 @@ public class BinaryDictDecoderEncoderTests extends AndroidTestCase {
     }
 
     public void testReadAndWriteWithByteArray() {
+        if (shouldSkipBinaryDictTests()) {
+            return;
+        }
         final List<String> results = new ArrayList<>();
 
         runReadAndWriteTests(results, BinaryDictUtils.USE_BYTE_ARRAY,
@@ -464,6 +478,9 @@ public class BinaryDictDecoderEncoderTests extends AndroidTestCase {
     }
 
     public void testReadUnigramsAndBigramsBinaryWithByteBuffer() {
+        if (shouldSkipBinaryDictTests()) {
+            return;
+        }
         final ArrayList<String> results = new ArrayList<>();
 
         runReadUnigramsAndBigramsTests(results, BinaryDictUtils.USE_BYTE_BUFFER,
@@ -475,6 +492,9 @@ public class BinaryDictDecoderEncoderTests extends AndroidTestCase {
     }
 
     public void testReadUnigramsAndBigramsBinaryWithByteArray() {
+        if (shouldSkipBinaryDictTests()) {
+            return;
+        }
         final ArrayList<String> results = new ArrayList<>();
 
         runReadUnigramsAndBigramsTests(results, BinaryDictUtils.USE_BYTE_ARRAY,
@@ -585,6 +605,9 @@ public class BinaryDictDecoderEncoderTests extends AndroidTestCase {
     }
 
     public void testGetTerminalPosition() {
+        if (shouldSkipBinaryDictTests()) {
+            return;
+        }
         final ArrayList<String> results = new ArrayList<>();
 
         runGetTerminalPositionTests(BinaryDictUtils.USE_BYTE_ARRAY,

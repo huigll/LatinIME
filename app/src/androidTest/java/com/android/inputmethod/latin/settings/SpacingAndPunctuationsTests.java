@@ -35,6 +35,7 @@ import com.android.inputmethod.latin.utils.RunInLocale;
 import junit.framework.AssertionFailedError;
 
 import org.junit.Before;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -82,6 +83,7 @@ public class SpacingAndPunctuationsTests {
 
     @Before
     public void setUp() throws Exception {
+        Assume.assumeTrue(Locale.ENGLISH.getLanguage().equals(Locale.getDefault().getLanguage()));
         mScreenMetrics = Settings.readScreenMetrics(getContext().getResources());
 
         // Language only

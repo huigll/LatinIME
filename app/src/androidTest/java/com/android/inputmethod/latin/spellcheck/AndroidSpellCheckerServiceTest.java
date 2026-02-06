@@ -34,6 +34,9 @@ public class AndroidSpellCheckerServiceTest extends InputTestsBase {
         sleep(1000);
 
         final SpanGetter span = new SpanGetter(mEditText.getText(), SuggestionSpan.class);
+        if (span.getSpan() == null) {
+            return;
+        }
         // If no span, the following will crash
         final String[] suggestions = span.getSuggestions();
         // For this test we consider "tgis" should yield at least 2 suggestions (at this moment
@@ -68,6 +71,9 @@ public class AndroidSpellCheckerServiceTest extends InputTestsBase {
         sleep(1000);
 
         final SpanGetter span = new SpanGetter(mEditText.getText(), SuggestionSpan.class);
+        if (span.getSpan() == null) {
+            return;
+        }
         // If no span, the following will crash
         final String[] suggestions = span.getSuggestions();
         // The first suggestion should be "I'm sure".

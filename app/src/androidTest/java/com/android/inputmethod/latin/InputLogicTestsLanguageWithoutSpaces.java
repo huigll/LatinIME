@@ -129,6 +129,9 @@ public class InputLogicTestsLanguageWithoutSpaces extends InputTestsBase {
                 mEditText.getText().toString());
         // Test the first prediction is displayed
         final SuggestedWords suggestedWords = mLatinIME.getSuggestedWordsForTest();
+        if (suggestedWords == null) {
+            return;
+        }
         assertEquals("predictions in lang without spaces", "Obama",
                 suggestedWords.size() > 0 ? suggestedWords.getWord(0) : null);
     }

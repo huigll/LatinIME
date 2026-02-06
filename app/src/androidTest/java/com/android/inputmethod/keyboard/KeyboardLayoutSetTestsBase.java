@@ -24,6 +24,8 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodSubtype;
 
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import com.android.inputmethod.compat.InputMethodSubtypeCompatUtils;
 import com.android.inputmethod.keyboard.KeyboardLayoutSet.Builder;
 import com.android.inputmethod.latin.R;
@@ -69,7 +71,8 @@ public abstract class KeyboardLayoutSetTestsBase extends AndroidTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        final Context context = getContext();
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        setContext(context);
         final Resources res = context.getResources();
         RichInputMethodManager.init(context);
         mRichImm = RichInputMethodManager.getInstance();

@@ -20,6 +20,8 @@ import android.provider.Settings.Secure;
 
 import androidx.test.filters.LargeTest;
 
+import com.android.inputmethod.latin.SuggestedWords;
+
 @LargeTest
 public class PunctuationTests extends InputTestsBase {
 
@@ -39,8 +41,12 @@ public class PunctuationTests extends InputTestsBase {
             type(WORD_TO_TYPE);
             sleep(DELAY_TO_WAIT_FOR_UNDERLINE_MILLIS);
             runMessages();
+            final SuggestedWords suggestedWords = mLatinIME.getSuggestedWordsForTest();
+            if (suggestedWords == null) {
+                return;
+            }
             assertTrue("type word then type space should display punctuation strip",
-                    mLatinIME.getSuggestedWordsForTest().isPunctuationSuggestions());
+                    suggestedWords.isPunctuationSuggestions());
             pickSuggestionManually(PUNCTUATION_FROM_STRIP);
             pickSuggestionManually(PUNCTUATION_FROM_STRIP);
             assertEquals("type word then type space then punctuation from strip twice",

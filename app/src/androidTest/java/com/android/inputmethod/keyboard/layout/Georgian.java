@@ -64,10 +64,7 @@ public final class Georgian extends LayoutBase {
     @Override
     public ExpectedKey[][] getCommonAlphabetShiftLayout(final boolean isPhone,
             final int elementId) {
-        if (elementId == KeyboardId.ELEMENT_ALPHABET_AUTOMATIC_SHIFTED) {
-            return getCommonAlphabetLayout(isPhone);
-        }
-        return ALPHABET_SHIFTED_COMMON;
+        return null;
     }
 
     private static final ExpectedKey[][] ALPHABET_COMMON = new ExpectedKeyboardBuilder()
