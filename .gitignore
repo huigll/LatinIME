@@ -5,3 +5,7 @@
 LatinIME.iml
 build/
 local.properties
+.cxx/
+**/build/
+**/.externalNativeBuild/
+**/.cxx/
