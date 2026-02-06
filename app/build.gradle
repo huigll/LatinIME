@@ -49,19 +49,6 @@ android {
 
     flavorDimensions "default"
 
-    sourceSets {
-        main {
-            res.srcDirs = ['../java/res']
-            java.srcDirs = ['../common/src', '../java/src']
-            manifest.srcFile '../java/AndroidManifest.xml'
-        }
-
-        androidTest {
-            res.srcDirs = ['../tests/res']
-            java.srcDirs = ['../tests/src']
-            manifest.srcFile "../tests/AndroidManifest.xml"
-        }
-    }
 
     lintOptions {
         checkReleaseBuilds false
