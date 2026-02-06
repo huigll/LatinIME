@@ -25,11 +25,6 @@ android {
 
         signingConfig signingConfigs.debug
 
-        externalNativeBuild {
-            cmake {
-                cppFlags "-std=c++17"
-            }
-        }
     }
 
     signingConfigs {
@@ -76,11 +71,6 @@ android {
         noCompress 'dict', 'dat'
     }
 
-    externalNativeBuild {
-        cmake {
-            path '../native/jni/CMakeLists.txt'
-        }
-    }
 }
 
 dependencies {

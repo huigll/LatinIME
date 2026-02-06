@@ -54,7 +54,7 @@ public final class BinaryDictionary extends Dictionary {
     private static final String TAG = BinaryDictionary.class.getSimpleName();
 
     // The cutoff returned by native for auto-commit confidence.
-    // Must be equal to CONFIDENCE_TO_AUTO_COMMIT in native/jni/src/defines.h
+    // Must be equal to CONFIDENCE_TO_AUTO_COMMIT in keyboard/src/main/cpp/latinime/src/defines.h
     private static final int CONFIDENCE_TO_AUTO_COMMIT = 1000000;
 
     public static final int DICTIONARY_MAX_WORD_LENGTH = 48;

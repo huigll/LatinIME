@@ -34,7 +34,7 @@ public class ProximityInfo {
     private static final String TAG = ProximityInfo.class.getSimpleName();
     private static final boolean DEBUG = false;
 
-    // Must be equal to MAX_PROXIMITY_CHARS_SIZE in native/jni/src/defines.h
+    // Must be equal to MAX_PROXIMITY_CHARS_SIZE in keyboard/src/main/cpp/latinime/src/defines.h
     public static final int MAX_PROXIMITY_CHARS_SIZE = 16;
     /** Number of key widths from current touch point to search for nearest keys. */
     private static final float SEARCH_DISTANCE = 1.2f;

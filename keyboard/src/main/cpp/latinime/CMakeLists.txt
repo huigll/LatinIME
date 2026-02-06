@@ -16,7 +16,7 @@ set(LATIN_IME_JNI_SRC
     jni_common.cpp
 )
 
-set(PINYINIME_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../keyboard/src/main/cpp/pinyinime")
+set(PINYINIME_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../pinyinime")
 
 set(PINYINIME_SRC
     ${PINYINIME_SRC_DIR}/pinyin_jni.cpp

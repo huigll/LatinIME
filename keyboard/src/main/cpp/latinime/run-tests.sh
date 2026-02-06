@@ -60,7 +60,7 @@ host_test_name=liblatinime_host_unittests
 
 pushd $PWD > /dev/null
 cd $(gettop)
-mmm -j16 packages/inputmethods/LatinIME/native/jni || \
+mmm -j16 packages/inputmethods/LatinIME/keyboard/src/main/cpp/latinime || \
     make -j16 adb $target_test_name $host_test_name
 if [[ $enable_host_test == yes ]]; then
   $ANDROID_HOST_OUT/bin/$host_test_name

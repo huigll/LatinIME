@@ -21,11 +21,11 @@ package com.android.inputmethod.latin.define;
  */
 public class DecoderSpecificConstants {
 
-    // Must be equal to MAX_WORD_LENGTH in native/jni/src/defines.h
+    // Must be equal to MAX_WORD_LENGTH in keyboard/src/main/cpp/latinime/src/defines.h
     public static final int DICTIONARY_MAX_WORD_LENGTH = 48;
 
     // (MAX_PREV_WORD_COUNT_FOR_N_GRAM + 1)-gram is supported in Java side. Needs to modify
-    // MAX_PREV_WORD_COUNT_FOR_N_GRAM in native/jni/src/defines.h for suggestions.
+    // MAX_PREV_WORD_COUNT_FOR_N_GRAM in keyboard/src/main/cpp/latinime/src/defines.h for suggestions.
     public static final int MAX_PREV_WORD_COUNT_FOR_N_GRAM = 3;
 
     public static final String DECODER_DICT_SUFFIX = "";
