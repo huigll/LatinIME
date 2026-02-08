@@ -1221,7 +1221,8 @@ public final class InputLogic {
             if (mWordComposer.isComposingWord()) {
                 setComposingTextInternal(getTextWithUnderline(mWordComposer.getTypedWord()), 1);
             } else {
-                mConnection.commitText("", 1);
+                setComposingTextInternal("", 1);
+                mConnection.finishComposingText();
             }
             inputTransaction.setRequiresUpdateSuggestions();
         } else {

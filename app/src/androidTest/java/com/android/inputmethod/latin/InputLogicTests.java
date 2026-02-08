@@ -444,6 +444,22 @@ public class InputLogicTests extends InputTestsBase {
         assertEquals("delete whole composing word", "", mEditText.getText().toString());
     }
 
+    public void testDeleteToEmptyClearsComposing() {
+        final String WORD_TO_TYPE = "hello";
+        type(WORD_TO_TYPE);
+        for (int i = 0; i < WORD_TO_TYPE.length(); ++i) {
+            type(Constants.CODE_DELETE);
+        }
+        assertEquals("delete to empty clears text", "", mEditText.getText().toString());
+        assertEquals("delete to empty clears composing start", -1,
+                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
+        assertEquals("delete to empty clears composing end", -1,
+                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        type("a");
+        assertEquals("type after delete to empty should insert", "a",
+                mEditText.getText().toString());
+    }
+
     public void testResumeSuggestionOnBackspace() {
         final String STRING_TO_TYPE = "and this ";
         final int typedLength = STRING_TO_TYPE.length();
