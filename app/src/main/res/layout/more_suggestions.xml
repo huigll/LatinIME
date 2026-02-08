@@ -18,14 +18,19 @@
 */
 -->
 
-<LinearLayout
+<com.android.inputmethod.latin.suggestions.MoreSuggestionsScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:latin="http://schemas.android.com/apk/res/com.android.inputmethod.latin"
+    android:id="@+id/more_suggestions_scroll_view"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
->
+    android:fillViewport="false"
+    android:fadeScrollbars="false"
+    android:overScrollMode="never"
+    android:scrollbars="vertical"
+    android:scrollbarStyle="outsideInset">
+
     <com.android.inputmethod.latin.suggestions.MoreSuggestionsView
-        xmlns:latin="http://schemas.android.com/apk/res/com.android.inputmethod.latin"
         android:id="@+id/more_suggestions_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -33,4 +38,4 @@
         latin:keyLabelSize="@dimen/config_suggestion_text_size"
         latin:keyHintLetterRatio="@fraction/config_more_suggestions_info_ratio"
         latin:keyHintLetterColor="@android:color/white" />
-</LinearLayout>
+</com.android.inputmethod.latin.suggestions.MoreSuggestionsScrollView>

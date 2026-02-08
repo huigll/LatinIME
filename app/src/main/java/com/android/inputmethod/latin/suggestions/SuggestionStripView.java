@@ -73,6 +73,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
     private final View mMoreSuggestionsContainer;
     private final MoreSuggestionsView mMoreSuggestionsView;
+    private final MoreSuggestionsScrollView mMoreSuggestionsScrollView;
     private final MoreSuggestions.Builder mMoreSuggestionsBuilder;
 
     private final ArrayList<TextView> mWordViews = new ArrayList<>();
@@ -162,8 +163,11 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
                 context, attrs, defStyle, mWordViews, mDividerViews, mDebugInfoViews);
 
         mMoreSuggestionsContainer = inflater.inflate(R.layout.more_suggestions, null);
+        mMoreSuggestionsScrollView = (MoreSuggestionsScrollView)mMoreSuggestionsContainer
+                .findViewById(R.id.more_suggestions_scroll_view);
         mMoreSuggestionsView = (MoreSuggestionsView)mMoreSuggestionsContainer
                 .findViewById(R.id.more_suggestions_view);
+        mMoreSuggestionsScrollView.setMoreSuggestionsView(mMoreSuggestionsView);
         mMoreSuggestionsBuilder = new MoreSuggestions.Builder(context, mMoreSuggestionsView);
 
         final Resources res = context.getResources();
@@ -207,6 +211,23 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
     public void setMoreSuggestionsHeight(final int remainingHeight) {
         mLayoutHelper.setMoreSuggestionsHeight(remainingHeight);
+        final int maxHeight = mLayoutHelper.getMaxMoreSuggestionsRow()
+                * mLayoutHelper.mMoreSuggestionsRowHeight
+                + mLayoutHelper.mMoreSuggestionsBottomGap;
+        final ViewGroup.LayoutParams params = mMoreSuggestionsScrollView.getLayoutParams();
+        final int clampedHeight = Math.max(0, maxHeight);
+        final boolean useWrapContent = clampedHeight == 0;
+        if (params == null) {
+            final int height = useWrapContent ? ViewGroup.LayoutParams.WRAP_CONTENT : clampedHeight;
+            mMoreSuggestionsScrollView.setLayoutParams(
+                    new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, height));
+        } else {
+            final int height = useWrapContent ? ViewGroup.LayoutParams.WRAP_CONTENT : clampedHeight;
+            if (params.height != height) {
+                params.height = height;
+                mMoreSuggestionsScrollView.setLayoutParams(params);
+            }
+        }
     }
 
     // This method checks if we should show the important notice (checks on permanent storage if
@@ -310,11 +331,36 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         final View container = mMoreSuggestionsContainer;
         final int maxWidth = stripWidth - container.getPaddingLeft() - container.getPaddingRight();
         final MoreSuggestions.Builder builder = mMoreSuggestionsBuilder;
+        final int maxRow = Math.max(1, mSuggestedWords.size());
         builder.layout(mSuggestedWords, mStartIndexOfMoreSuggestions, maxWidth,
                 (int)(maxWidth * layoutHelper.mMinMoreSuggestionsWidth),
-                layoutHelper.getMaxMoreSuggestionsRow(), parentKeyboard);
+                maxRow, parentKeyboard);
         mMoreSuggestionsView.setKeyboard(builder.build());
-        container.measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        final int maxHeight = layoutHelper.getMaxMoreSuggestionsRow()
+                * layoutHelper.mMoreSuggestionsRowHeight
+                + layoutHelper.mMoreSuggestionsBottomGap;
+        final ViewGroup.LayoutParams params = mMoreSuggestionsScrollView.getLayoutParams();
+        if (maxHeight > 0) {
+            if (params == null || params.height != maxHeight) {
+                final int height = maxHeight;
+                mMoreSuggestionsScrollView.setLayoutParams(
+                        new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, height));
+            }
+        } else if (params != null && params.height != ViewGroup.LayoutParams.WRAP_CONTENT) {
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            mMoreSuggestionsScrollView.setLayoutParams(params);
+        }
+        final int widthSpec = View.MeasureSpec.makeMeasureSpec(maxWidth, View.MeasureSpec.AT_MOST);
+        final int heightSpec = (maxHeight > 0)
+                ? View.MeasureSpec.makeMeasureSpec(maxHeight, View.MeasureSpec.EXACTLY)
+                : View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        container.measure(widthSpec, heightSpec);
+        mMoreSuggestionsScrollView.post(new Runnable() {
+            @Override
+            public void run() {
+                mMoreSuggestionsScrollView.fullScroll(View.FOCUS_UP);
+            }
+        });
 
         final MoreKeysPanel moreKeysPanel = mMoreSuggestionsView;
         final int pointX = stripWidth / 2;

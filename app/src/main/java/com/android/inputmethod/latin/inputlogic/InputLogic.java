@@ -75,6 +75,7 @@ import javax.annotation.Nonnull;
  */
 public final class InputLogic {
     private static final String TAG = InputLogic.class.getSimpleName();
+    private static final int PINYIN_MAX_CANDIDATES = 100;
 
     // TODO : Remove this member when we can.
     final LatinIME mLatinIME;
@@ -273,7 +274,8 @@ public final class InputLogic {
         ensurePinyinDecoder();
         mConnection.setComposingText(mPinyinComposing, 1);
 
-        mPinyinCandidates = mPinyinDecoder.candidates(mPinyinComposing.toString(), 10);
+        mPinyinCandidates = mPinyinDecoder.candidates(
+                mPinyinComposing.toString(), PINYIN_MAX_CANDIDATES);
         final ArrayList<SuggestedWordInfo> suggestions = new ArrayList<>();
         final SuggestedWordInfo typedInfo = new SuggestedWordInfo(
                 mPinyinComposing.toString(),

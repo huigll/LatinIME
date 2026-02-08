@@ -40,10 +40,10 @@ public final class MoreSuggestions extends Keyboard {
     }
 
     private static final class MoreSuggestionsParam extends KeyboardParams {
-        private final int[] mWidths = new int[SuggestedWords.MAX_SUGGESTIONS];
-        private final int[] mRowNumbers = new int[SuggestedWords.MAX_SUGGESTIONS];
-        private final int[] mColumnOrders = new int[SuggestedWords.MAX_SUGGESTIONS];
-        private final int[] mNumColumnsInRow = new int[SuggestedWords.MAX_SUGGESTIONS];
+        private int[] mWidths = new int[0];
+        private int[] mRowNumbers = new int[0];
+        private int[] mColumnOrders = new int[0];
+        private int[] mNumColumnsInRow = new int[0];
         private static final int MAX_COLUMNS_IN_ROW = 3;
         private int mNumRows;
         public Drawable mDivider;
@@ -51,6 +51,16 @@ public final class MoreSuggestions extends Keyboard {
 
         public MoreSuggestionsParam() {
             super();
+        }
+
+        private void ensureCapacity(final int size) {
+            if (mWidths.length >= size) {
+                return;
+            }
+            mWidths = new int[size];
+            mRowNumbers = new int[size];
+            mColumnOrders = new int[size];
+            mNumColumnsInRow = new int[size];
         }
 
         public int layout(final SuggestedWords suggestedWords, final int fromIndex,
@@ -65,7 +75,8 @@ public final class MoreSuggestions extends Keyboard {
             int row = 0;
             int index = fromIndex;
             int rowStartIndex = fromIndex;
-            final int size = Math.min(suggestedWords.size(), SuggestedWords.MAX_SUGGESTIONS);
+            final int size = suggestedWords.size();
+            ensureCapacity(size);
             while (index < size) {
                 final String word;
                 if (isIndexSubjectToAutoCorrection(suggestedWords, index)) {
@@ -147,7 +158,7 @@ public final class MoreSuggestions extends Keyboard {
 
         public int getY(final int index) {
             final int row = mRowNumbers[index];
-            return (mNumRows -1 - row) * mDefaultRowHeight + mTopPadding;
+            return row * mDefaultRowHeight + mTopPadding;
         }
 
         public int getWidth(final int index) {
