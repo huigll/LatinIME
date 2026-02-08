@@ -897,11 +897,17 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         // Note that the calling sequence of onCreate() and onCurrentInputMethodSubtypeChanged()
         // is not guaranteed. It may even be called at the same time on a different thread.
         InputMethodSubtype oldSubtype = mRichImm.getCurrentSubtype().getRawSubtype();
+        final Locale oldLocale = SubtypeLocaleUtils.getSubtypeLocale(oldSubtype);
+        final Locale newLocale = SubtypeLocaleUtils.getSubtypeLocale(subtype);
+        final boolean isLanguageChanged = oldLocale != null && newLocale != null
+                && !oldLocale.getLanguage().equals(newLocale.getLanguage());
         StatsUtils.onSubtypeChanged(oldSubtype, subtype);
         mRichImm.onSubtypeChanged(subtype);
         mInputLogic.onSubtypeChanged(SubtypeLocaleUtils.getCombiningRulesExtraValue(subtype),
                 mSettings.getCurrent());
         loadKeyboard();
+        mInputLogic.setAllowComposingWhenCursorTouchingWord(isLanguageChanged);
+        setNeutralSuggestionStrip();
     }
 
     void onStartInputInternal(final EditorInfo editorInfo, final boolean restarting) {

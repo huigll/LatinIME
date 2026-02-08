@@ -101,6 +101,7 @@ public final class InputLogic {
     private final StringBuilder mPinyinComposing = new StringBuilder();
     private List<String> mPinyinCandidates = new ArrayList<>();
     private SuggestedWords mPinyinSuggestedWords = SuggestedWords.getEmptyInstance();
+    private boolean mAllowComposingWhenCursorTouchingWord;
 
     private int mDeleteCount;
     private long mLastKeyTime;
@@ -188,6 +189,10 @@ public final class InputLogic {
     public void onSubtypeChanged(final String combiningSpec, final SettingsValues settingsValues) {
         finishInput();
         startInput(combiningSpec, settingsValues);
+    }
+
+    public void setAllowComposingWhenCursorTouchingWord(final boolean allow) {
+        mAllowComposingWhenCursorTouchingWord = allow;
     }
 
     /**
@@ -988,6 +993,12 @@ public final class InputLogic {
         // make it shorter (possibly cut into several pieces). Also factor
         // handleNonSpecialCharacterEvent which has the same name as other handle* methods but is
         // not the same.
+        final boolean allowComposingWhenTouchingWord = mAllowComposingWhenCursorTouchingWord
+                && !mConnection.isCursorFollowedByWordCharacter(
+                        settingsValues.mSpacingAndPunctuations);
+        if (allowComposingWhenTouchingWord) {
+            mAllowComposingWhenCursorTouchingWord = false;
+        }
         boolean isComposingWord = mWordComposer.isComposingWord();
 
         // TODO: remove isWordConnector() and use isUsuallyFollowedBySpace() instead.
@@ -1029,6 +1040,7 @@ public final class InputLogic {
         // TODO: Cache the text after the cursor so we don't need to go to the InputConnection
         // each time. We are already doing this for getTextBeforeCursor().
                 (!settingsValues.mSpacingAndPunctuations.mCurrentLanguageHasSpaces
+                        || allowComposingWhenTouchingWord
                         || !mConnection.isCursorTouchingWord(settingsValues.mSpacingAndPunctuations,
                                 !mConnection.hasSlowInputConnection() /* checkTextAfter */))) {
             // Reset entirely the composing state anyway, then start composing a new word unless
