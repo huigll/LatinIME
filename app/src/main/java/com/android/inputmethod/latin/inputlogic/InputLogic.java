@@ -1965,6 +1965,10 @@ public final class InputLogic {
      */
     public int getCurrentAutoCapsState(final SettingsValues settingsValues) {
         if (!settingsValues.mAutoCap) return Constants.TextUtils.CAP_MODE_OFF;
+        if (mWordComposer.isComposingWord()) {
+            // While composing (shown in the bubble), auto-caps should be off.
+            return Constants.TextUtils.CAP_MODE_OFF;
+        }
 
         final EditorInfo ei = getCurrentInputEditorInfo();
         if (ei == null) return Constants.TextUtils.CAP_MODE_OFF;
@@ -2411,6 +2415,7 @@ public final class InputLogic {
         // strings.
         mLastComposedWord = mWordComposer.commitWord(commitType,
                 chosenWordWithSuggestions, separatorString, ngramContext);
+        mSuggestionStripViewAccessor.setComposingText("");
         if (DebugFlags.DEBUG_ENABLED) {
             long runTimeMillis = System.currentTimeMillis() - startTimeMillis;
             Log.d(TAG, "commitChosenWord() : " + runTimeMillis + " ms to run "

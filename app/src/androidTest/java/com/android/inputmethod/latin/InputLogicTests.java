@@ -47,7 +47,10 @@ public class InputLogicTests extends InputTestsBase {
     public void testTypeWord() {
         final String WORD_TO_TYPE = "abcd";
         type(WORD_TO_TYPE);
-        assertEquals("type word", WORD_TO_TYPE, mEditText.getText().toString());
+        assertComposingText("type word shows composing bubble", WORD_TO_TYPE);
+        assertEquals("type word does not write to editor", "", mEditText.getText().toString());
+        commitComposingText();
+        assertEquals("type word then commit", WORD_TO_TYPE, mEditText.getText().toString());
     }
 
     public void testPickSuggestionThenBackspace() {
@@ -112,6 +115,7 @@ public class InputLogicTests extends InputTestsBase {
         final int SELECTION_END = 19;
         final String EXPECTED_RESULT = "some text  some text";
         type(STRING_TO_TYPE);
+        commitComposingText();
         // Don't use the sendUpdateForCursorMove* family of methods here because they
         // don't handle selections.
         // Send once to simulate the cursor actually responding to the move caused by typing.
@@ -133,6 +137,7 @@ public class InputLogicTests extends InputTestsBase {
         final int SELECTION_END = 19;
         final String EXPECTED_RESULT = "some text some text";
         type(STRING_TO_TYPE);
+        commitComposingText();
         // Don't use the sendUpdateForCursorMove* family of methods here because they
         // don't handle selections.
         // Send once to simulate the cursor actually responding to the move caused by typing.
@@ -201,6 +206,7 @@ public class InputLogicTests extends InputTestsBase {
         type(Constants.CODE_DELETE);
 
         type(STRING_TO_TYPE_SECOND);
+        commitComposingText();
         sendUpdateForCursorMoveTo(STRING_TO_TYPE_FIRST.length() - 1
                 + STRING_TO_TYPE_SECOND.length());
         assertEquals("auto-correct with space then revert then type more", EXPECTED_RESULT,
@@ -374,6 +380,7 @@ public class InputLogicTests extends InputTestsBase {
         type(WORD1_TO_TYPE);
         pickSuggestionManually(WORD1_TO_TYPE);
         type(WORD2_TO_TYPE);
+        commitComposingText();
         assertEquals("manual pick then type", EXPECTED_RESULT, mEditText.getText().toString());
     }
 
@@ -419,6 +426,7 @@ public class InputLogicTests extends InputTestsBase {
         type(WORD1_TO_TYPE);
         pickSuggestionManually(WORD1_TO_TYPE);
         type(WORD2_TO_TYPE);
+        commitComposingText();
         assertEquals("manual pick then space then type", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }
@@ -451,38 +459,26 @@ public class InputLogicTests extends InputTestsBase {
             type(Constants.CODE_DELETE);
         }
         assertEquals("delete to empty clears text", "", mEditText.getText().toString());
-        assertEquals("delete to empty clears composing start", -1,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("delete to empty clears composing end", -1,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("delete to empty clears composing", "");
         type("a");
-        assertEquals("type after delete to empty should insert", "a",
-                mEditText.getText().toString());
+        assertComposingText("type after delete to empty shows composing bubble", "a");
     }
 
     public void testResumeSuggestionOnBackspace() {
         final String STRING_TO_TYPE = "and this ";
         final int typedLength = STRING_TO_TYPE.length();
         type(STRING_TO_TYPE);
-        assertEquals("resume suggestion on backspace", -1,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("resume suggestion on backspace", -1,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("no composing before backspace", "");
         sendUpdateForCursorMoveTo(typedLength);
         type(Constants.CODE_DELETE);
-        assertEquals("resume suggestion on backspace", 4,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("resume suggestion on backspace", 8,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("resume suggestion on backspace", "");
     }
 
     private void helperTestComposing(final String wordToType, final boolean shouldBeComposing) {
         mEditText.setText("");
         type(wordToType);
-        assertEquals("start composing inside text", shouldBeComposing ? 0 : -1,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("start composing inside text", shouldBeComposing ? wordToType.length() : -1,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("start composing inside text",
+                shouldBeComposing ? wordToType : "");
     }
 
     public void testStartComposing() {
@@ -636,7 +632,7 @@ public class InputLogicTests extends InputTestsBase {
         type(Constants.CODE_DELETE);
         assertEquals("composing with multiple backspace",
                 WORD_TO_TYPE.length() * TIMES_TO_TYPE - TIMES_TO_BACKSPACE,
-                mEditText.getText().length());
+                getComposingText().length());
     }
 
     public void testManySingleQuotes() {
@@ -735,22 +731,24 @@ public class InputLogicTests extends InputTestsBase {
     }
 
     private void ensureComposingSpanPos(final String message, final int from, final int to) {
-        assertEquals(message, from, BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals(message, to, BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        if (from < 0 || to < 0) {
+            assertComposingText(message, "");
+        } else {
+            assertEquals(message, to - from, getComposingText().length());
+        }
     }
 
     public void testTypeWithinComposing() {
         final String WORD_TO_TYPE = "something";
-        final String EXPECTED_RESULT = "some thing";
         typeWordAndPutCursorInside(WORD_TO_TYPE, 0 /* startPos */);
         type(" ");
         ensureComposingSpanPos("space while in the middle of a word cancels composition", -1, -1);
-        assertEquals("space in the middle of a composing word", EXPECTED_RESULT,
+        assertEquals("space in the middle of a composing word", " ",
                 mEditText.getText().toString());
         int cursorPos = sendUpdateForCursorMoveToEndOfLine();
         runMessages();
         type(" ");
-        assertEquals("mbo", "some thing ", mEditText.getText().toString());
+        assertEquals("mbo", "  ", mEditText.getText().toString());
         typeWordAndPutCursorInside(WORD_TO_TYPE, cursorPos + 1 /* startPos */);
         type(Constants.CODE_DELETE);
         ensureComposingSpanPos("delete while in the middle of a word cancels composition", -1, -1);
@@ -761,11 +759,10 @@ public class InputLogicTests extends InputTestsBase {
             return;
         }
         final String WORD_TO_TYPE = "something";
-        final String EXPECTED_RESULT = "some thing";
         gestureWordAndPutCursorInside(WORD_TO_TYPE, 0 /* startPos */);
         type(" ");
         ensureComposingSpanPos("space while in the middle of a word cancels composition", -1, -1);
-        assertEquals("space in the middle of a composing word", EXPECTED_RESULT,
+        assertEquals("space in the middle of a composing word", " ",
                 mEditText.getText().toString());
         int cursorPos = sendUpdateForCursorMoveToEndOfLine();
         runMessages();

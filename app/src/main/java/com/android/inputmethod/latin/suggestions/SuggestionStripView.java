@@ -42,6 +42,7 @@ import com.android.inputmethod.accessibility.AccessibilityUtils;
 import com.android.inputmethod.keyboard.Keyboard;
 import com.android.inputmethod.keyboard.MainKeyboardView;
 import com.android.inputmethod.keyboard.MoreKeysPanel;
+import com.android.inputmethod.annotations.UsedForTesting;
 import com.android.inputmethod.latin.AudioAndHapticFeedbackManager;
 import com.android.inputmethod.latin.Dictionary;
 import com.android.inputmethod.latin.R;
@@ -244,6 +245,11 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         mComposingTextView.setText(text);
         mComposingTextView.setVisibility(VISIBLE);
         mComposingTextView.bringToFront();
+    }
+
+    @UsedForTesting
+    public String getComposingTextForTest() {
+        return mComposingText;
     }
 
     public void setMoreSuggestionsHeight(final int remainingHeight) {

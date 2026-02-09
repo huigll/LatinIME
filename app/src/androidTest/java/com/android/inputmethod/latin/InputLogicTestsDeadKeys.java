@@ -58,6 +58,8 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        assertComposingText("simple dead circumflex", EXPECTED_RESULT);
+        commitComposingText();
         assertEquals("simple dead circumflex", EXPECTED_RESULT, mEditText.getText().toString());
     }
 
@@ -72,6 +74,8 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        assertComposingText("dead circumflex backspace", EXPECTED_RESULT);
+        commitComposingText();
         assertEquals("dead circumflex backspace", EXPECTED_RESULT, mEditText.getText().toString());
     }
 
@@ -84,6 +88,8 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        assertComposingText("dead circumflex gives feedback", EXPECTED_RESULT);
+        commitComposingText();
         assertEquals("dead circumflex gives feedback", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }
@@ -102,6 +108,7 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        commitComposingText();
         assertEquals("dead diaeresis space commits the dead char", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }
@@ -117,6 +124,8 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        assertComposingText("dead acute on a typed", EXPECTED_RESULT1);
+        commitComposingText();
         assertEquals("dead acute on a typed", EXPECTED_RESULT1, mEditText.getText().toString());
         mLatinIME.onEvent(Event.createSoftwareKeypressEvent(Event.NOT_A_CODE_POINT,
                 Constants.CODE_DELETE, Constants.NOT_A_COORDINATE, Constants.NOT_A_COORDINATE,
@@ -136,6 +145,7 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        commitComposingText();
         assertEquals("Finnish dead stroke", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }
@@ -159,6 +169,7 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        commitComposingText();
         assertEquals("double dead ogonek, and backspace", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }
@@ -175,6 +186,7 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        commitComposingText();
         assertEquals("both circumflex and diaeresis on r", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }
@@ -192,6 +204,7 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        commitComposingText();
         assertEquals("dead circumflex, dead diaeresis, backspace, u", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }
@@ -210,6 +223,7 @@ public class InputLogicTestsDeadKeys extends InputTestsBase {
         for (final Event event : events) {
             mLatinIME.onEvent(event);
         }
+        commitComposingText();
         assertEquals("dead circumflex, double dead diaeresis, backspace, u", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }

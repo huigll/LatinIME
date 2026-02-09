@@ -23,6 +23,7 @@ import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.test.ServiceTestCase;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.text.SpannableStringBuilder;
 import android.text.style.CharacterStyle;
 import android.text.style.SuggestionSpan;
@@ -312,6 +313,22 @@ public class InputTestsBase extends ServiceTestCase<LatinIMEForTests> {
         for (int i = 0; i < stringToType.length(); i = stringToType.offsetByCodePoints(i, 1)) {
             type(stringToType.codePointAt(i));
         }
+    }
+
+    protected String getComposingText() {
+        return mLatinIME.getComposingTextForTest();
+    }
+
+    protected void commitComposingText() {
+        final String composing = getComposingText();
+        if (!TextUtils.isEmpty(composing)) {
+            pickSuggestionManually(composing);
+            sendUpdateForCursorMoveTo(mEditText.getText().length());
+        }
+    }
+
+    protected void assertComposingText(final String message, final String expected) {
+        assertEquals(message, expected, getComposingText());
     }
 
     protected Point getXY(final int codePoint) {

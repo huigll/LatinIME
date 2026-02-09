@@ -75,6 +75,8 @@ public class PunctuationTests extends InputTestsBase {
         pickSuggestionManually(PUNCTUATION_FROM_STRIP);
         pickSuggestionManually(PUNCTUATION_FROM_STRIP);
         type(WORD2_TO_TYPE);
+        assertComposingText("typed word should be composing", WORD2_TO_TYPE);
+        commitComposingText();
         assertEquals("pick word then pick punctuation twice then type", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }

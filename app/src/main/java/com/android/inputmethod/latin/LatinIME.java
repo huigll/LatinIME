@@ -100,6 +100,7 @@ import com.android.inputmethod.latin.utils.StatsUtils;
 import com.android.inputmethod.latin.utils.StatsUtilsManager;
 import com.android.inputmethod.latin.utils.SubtypeLocaleUtils;
 import com.android.inputmethod.latin.utils.ViewLayoutUtils;
+import com.android.inputmethod.annotations.UsedForTesting;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -1669,6 +1670,11 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (mSuggestionStripView != null) {
             mSuggestionStripView.setComposingText(text);
         }
+    }
+
+    @UsedForTesting
+    public String getComposingTextForTest() {
+        return mSuggestionStripView != null ? mSuggestionStripView.getComposingTextForTest() : "";
     }
 
     public InputMethodSubtype getCurrentSubtype() {

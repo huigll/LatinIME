@@ -29,6 +29,7 @@ public class InputLogicTestsLanguageWithoutSpaces extends InputTestsBase {
         final String EXPECTED_RESULT = "thisis";
         changeKeyboardLocaleAndDictLocale("th", "en_US");
         type(STRING_TO_TYPE);
+        commitComposingText();
         assertEquals("simple auto-correct for language without spaces", EXPECTED_RESULT,
                 mEditText.getText().toString());
     }
@@ -42,29 +43,22 @@ public class InputLogicTestsLanguageWithoutSpaces extends InputTestsBase {
         assertEquals("simple auto-correct for language without spaces",
                 EXPECTED_INTERMEDIATE_RESULT, mEditText.getText().toString());
         type(Constants.CODE_DELETE);
+        assertComposingText("simple auto-correct for language without spaces", EXPECTED_FINAL_RESULT);
+        commitComposingText();
         assertEquals("simple auto-correct for language without spaces",
                 EXPECTED_FINAL_RESULT, mEditText.getText().toString());
         // Check we are back to composing the word
-        assertEquals("don't resume suggestion on backspace", 0,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("don't resume suggestion on backspace", 4,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("don't resume suggestion on backspace", "");
     }
 
     public void testDontResumeSuggestionOnBackspace() {
         final String WORD_TO_TYPE = "and this ";
         changeKeyboardLocaleAndDictLocale("th", "en_US");
         type(WORD_TO_TYPE);
-        assertEquals("don't resume suggestion on backspace", -1,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("don't resume suggestion on backspace", -1,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("don't resume suggestion on backspace", "");
         type(" ");
         type(Constants.CODE_DELETE);
-        assertEquals("don't resume suggestion on backspace", -1,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("don't resume suggestion on backspace", -1,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("don't resume suggestion on backspace", "");
     }
 
     public void testStartComposingInsideText() {
@@ -73,21 +67,16 @@ public class InputLogicTestsLanguageWithoutSpaces extends InputTestsBase {
         final int CURSOR_POS = 4;
         changeKeyboardLocaleAndDictLocale("th", "en_US");
         type(WORD_TO_TYPE);
+        commitComposingText();
         mLatinIME.onUpdateSelection(0, 0, typedLength, typedLength, -1, -1);
         mInputConnection.setSelection(CURSOR_POS, CURSOR_POS);
         mLatinIME.onUpdateSelection(typedLength, typedLength,
                 CURSOR_POS, CURSOR_POS, -1, -1);
         sleep(DELAY_TO_WAIT_FOR_PREDICTIONS_MILLIS);
         runMessages();
-        assertEquals("start composing inside text", -1,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("start composing inside text", -1,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("start composing inside text", "");
         type("xxxx");
-        assertEquals("start composing inside text", 4,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("start composing inside text", 8,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("start composing inside text", "xxxx");
     }
 
     public void testMovingCursorInsideWordAndType() {
@@ -96,6 +85,7 @@ public class InputLogicTestsLanguageWithoutSpaces extends InputTestsBase {
         final int CURSOR_POS = 4;
         changeKeyboardLocaleAndDictLocale("th", "en_US");
         type(WORD_TO_TYPE);
+        commitComposingText();
         mLatinIME.onUpdateSelection(0, 0, typedLength, typedLength, 0, typedLength);
         sleep(DELAY_TO_WAIT_FOR_PREDICTIONS_MILLIS);
         runMessages();
@@ -104,18 +94,12 @@ public class InputLogicTestsLanguageWithoutSpaces extends InputTestsBase {
                 CURSOR_POS, CURSOR_POS, 0, typedLength);
         sleep(DELAY_TO_WAIT_FOR_PREDICTIONS_MILLIS);
         runMessages();
-        assertEquals("move cursor inside text", 0,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("move cursor inside text", typedLength,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("move cursor inside text", "");
         type("x");
         sleep(DELAY_TO_WAIT_FOR_PREDICTIONS_MILLIS);
         sleep(DELAY_TO_WAIT_FOR_PREDICTIONS_MILLIS);
         runMessages();
-        assertEquals("start typing while cursor inside composition", CURSOR_POS,
-                BaseInputConnection.getComposingSpanStart(mEditText.getText()));
-        assertEquals("start typing while cursor inside composition", CURSOR_POS + 1,
-                BaseInputConnection.getComposingSpanEnd(mEditText.getText()));
+        assertComposingText("start typing while cursor inside composition", "x");
     }
 
     public void testPredictions() {
@@ -125,6 +109,7 @@ public class InputLogicTestsLanguageWithoutSpaces extends InputTestsBase {
         sleep(DELAY_TO_WAIT_FOR_PREDICTIONS_MILLIS);
         runMessages();
         // Make sure there is no space
+        commitComposingText();
         assertEquals("predictions in lang without spaces", "Barack",
                 mEditText.getText().toString());
         // Test the first prediction is displayed
