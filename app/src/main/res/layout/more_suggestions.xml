@@ -27,7 +27,10 @@
     android:fillViewport="false"
     android:fadeScrollbars="false"
     android:overScrollMode="never"
+    android:scrollbarAlwaysDrawVerticalTrack="true"
     android:scrollbars="vertical"
+    android:scrollbarThumbVertical="@drawable/more_suggestions_scrollbar_thumb"
+    android:scrollbarTrackVertical="@drawable/more_suggestions_scrollbar_track"
     android:scrollbarStyle="outsideInset">
 
     <com.android.inputmethod.latin.suggestions.MoreSuggestionsView

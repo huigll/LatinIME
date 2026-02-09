@@ -84,4 +84,6 @@
     <color name="setup_welcome_video_margin_color">#FFCCCCCC</color>
     <!-- Accent color for the notification. We need to match this to the OS build -->
     <color name="notification_accent_color">#FF607D8B</color>
+    <color name="more_suggestions_scrollbar_thumb">#B3FFFFFF</color>
+    <color name="more_suggestions_scrollbar_track">#33000000</color>
 </resources>
