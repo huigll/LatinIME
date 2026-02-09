@@ -1,11 +1,11 @@
-package com.carbit.inappkeyboard.keyboard;
+package com.android.inputmethod.keyboard;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.os.ParcelFileDescriptor;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -21,6 +21,10 @@ import java.util.Random;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import com.carbit.inappkeyboard.keyboard.ICandidateBar;
+import com.carbit.inappkeyboard.keyboard.ITextCommitTarget;
+import com.carbit.inappkeyboard.keyboard.PinyinDecoder;
 
 @RunWith(AndroidJUnit4.class)
 public class PinyinNativeApiInstrumentedTest {
