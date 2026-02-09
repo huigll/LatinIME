@@ -22,8 +22,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.carbit.inappkeyboard.keyboard.ICandidateBar;
-import com.carbit.inappkeyboard.keyboard.ITextCommitTarget;
 import com.carbit.inappkeyboard.keyboard.PinyinDecoder;
 
 @RunWith(AndroidJUnit4.class)
@@ -133,29 +131,9 @@ public class PinyinNativeApiInstrumentedTest {
     }
 
 
-    private static class NoopCandidateBar implements ICandidateBar {
-        @Override
-        public void setCandidates(java.util.List<String> candidates, OnCandidateClickListener onClick) {
-            // no-op
-        }
 
-        @Override
-        public void clear() {
-            // no-op
-        }
-    }
 
-    private static class NoopCommitTarget implements ITextCommitTarget {
-        @Override
-        public void insert(String text) {
-            // no-op
-        }
 
-        @Override
-        public void deleteLastChar(int count) {
-            // no-op
-        }
-    }
 
     private boolean openDecoder(Context ctx) throws IOException {
         File usr = new File(ctx.getFilesDir(), "usr_dict.dat");
