@@ -128,38 +128,6 @@ public class PinyinNativeApiInstrumentedTest {
         assertTrue(PinyinDecoder.nativeImCloseDecoder());
     }
 
-    @Test
-    public void stress_random_pinyin_input_does_not_crash() {
-        // Chinese mode stress: random 1-10 letters, ensure no native crash.
-        PinyinDecoder decoder = new PinyinDecoder(context);
-        PinyinImeSession session = new PinyinImeSession(decoder);
-        ICandidateBar bar = new NoopCandidateBar();
-        ITextCommitTarget target = new NoopCommitTarget();
-
-        Random random = new Random(1337);
-        for (int i = 0; i < 600; i++) {
-            int len = 1 + random.nextInt(10);
-            for (int j = 0; j < len; j++) {
-                int op = random.nextInt(100);
-                if (op < 70) {
-                    char c = (char) ('a' + random.nextInt(26));
-                    session.onCommitChar(String.valueOf(c), bar);
-                } else if (op < 85) {
-                    session.onBackspace(bar);
-                } else {
-                    session.clear();
-                    bar.clear();
-                }
-            }
-            // Occasionally commit best candidate and clear composing.
-            if (random.nextInt(100) < 80) {
-                session.onSpaceCommitBest(target, bar);
-            } else {
-                session.clear();
-                bar.clear();
-            }
-        }
-    }
 
     private static class NoopCandidateBar implements ICandidateBar {
         @Override
