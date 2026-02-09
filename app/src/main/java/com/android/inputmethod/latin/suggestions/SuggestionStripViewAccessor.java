@@ -24,4 +24,5 @@ import com.android.inputmethod.latin.SuggestedWords;
 public interface SuggestionStripViewAccessor {
     public void setNeutralSuggestionStrip();
     public void showSuggestionStrip(final SuggestedWords suggestedWords);
+    public void setComposingText(final String text);
 }

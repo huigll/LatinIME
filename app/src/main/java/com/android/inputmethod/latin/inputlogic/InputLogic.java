@@ -76,6 +76,7 @@ import javax.annotation.Nonnull;
 public final class InputLogic {
     private static final String TAG = InputLogic.class.getSimpleName();
     private static final int PINYIN_MAX_CANDIDATES = 100;
+    private static final boolean SHOW_COMPOSING_TEXT_IN_EDITOR = false;
 
     // TODO : Remove this member when we can.
     final LatinIME mLatinIME;
@@ -260,6 +261,7 @@ public final class InputLogic {
         mPinyinComposing.setLength(0);
         mPinyinCandidates = new ArrayList<>();
         mPinyinSuggestedWords = SuggestedWords.getEmptyInstance();
+        mSuggestionStripViewAccessor.setComposingText("");
     }
 
     private void updatePinyinComposingAndSuggestions() {
@@ -267,12 +269,13 @@ public final class InputLogic {
             mPinyinCandidates = new ArrayList<>();
             mPinyinSuggestedWords = SuggestedWords.getEmptyInstance();
             mSuggestedWords = mPinyinSuggestedWords;
+            mSuggestionStripViewAccessor.setComposingText("");
             mSuggestionStripViewAccessor.setNeutralSuggestionStrip();
             return;
         }
 
         ensurePinyinDecoder();
-        mConnection.setComposingText(mPinyinComposing, 1);
+        setComposingTextInternal(mPinyinComposing, 1);
 
         mPinyinCandidates = mPinyinDecoder.candidates(
                 mPinyinComposing.toString(), PINYIN_MAX_CANDIDATES);
@@ -2105,6 +2108,7 @@ public final class InputLogic {
     private void resetComposingState(final boolean alsoResetLastComposedWord) {
         mWordComposer.reset();
         resetPinyinState();
+        mSuggestionStripViewAccessor.setComposingText("");
         if (alsoResetLastComposedWord) {
             mLastComposedWord = LastComposedWord.NOT_A_COMPOSED_WORD;
         }
@@ -2501,6 +2505,13 @@ public final class InputLogic {
      */
     private void setComposingTextInternalWithBackgroundColor(final CharSequence newComposingText,
             final int newCursorPosition, final int backgroundColor, final int coloredTextLength) {
+        final String composingText = TextUtils.isEmpty(newComposingText)
+                ? "" : newComposingText.toString();
+        mSuggestionStripViewAccessor.setComposingText(composingText);
+        if (!SHOW_COMPOSING_TEXT_IN_EDITOR) {
+            mConnection.setComposingText("", newCursorPosition);
+            return;
+        }
         final CharSequence composingTextToBeSet;
         if (backgroundColor == Color.TRANSPARENT) {
             composingTextToBeSet = newComposingText;

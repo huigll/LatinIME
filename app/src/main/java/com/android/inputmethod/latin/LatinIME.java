@@ -1664,6 +1664,13 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         AccessibilityUtils.getInstance().setAutoCorrection(suggestedWords);
     }
 
+    @Override
+    public void setComposingText(final String text) {
+        if (mSuggestionStripView != null) {
+            mSuggestionStripView.setComposingText(text);
+        }
+    }
+
     public InputMethodSubtype getCurrentSubtype() {
         return mRichImm.getCurrentSubtype().getRawSubtype();
     }

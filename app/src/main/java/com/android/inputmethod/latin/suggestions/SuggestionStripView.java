@@ -43,6 +43,7 @@ import com.android.inputmethod.keyboard.Keyboard;
 import com.android.inputmethod.keyboard.MainKeyboardView;
 import com.android.inputmethod.keyboard.MoreKeysPanel;
 import com.android.inputmethod.latin.AudioAndHapticFeedbackManager;
+import com.android.inputmethod.latin.Dictionary;
 import com.android.inputmethod.latin.R;
 import com.android.inputmethod.latin.SuggestedWords;
 import com.android.inputmethod.latin.SuggestedWords.SuggestedWordInfo;
@@ -79,6 +80,8 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
     private final ArrayList<TextView> mWordViews = new ArrayList<>();
     private final ArrayList<TextView> mDebugInfoViews = new ArrayList<>();
     private final ArrayList<View> mDividerViews = new ArrayList<>();
+    private final TextView mComposingTextView;
+    private String mComposingText = "";
 
     Listener mListener;
     private SuggestedWords mSuggestedWords = SuggestedWords.getEmptyInstance();
@@ -138,12 +141,33 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
 
         final LayoutInflater inflater = LayoutInflater.from(context);
         inflater.inflate(R.layout.suggestions_strip, this);
+        setClipChildren(false);
+        setClipToPadding(false);
 
         mSuggestionsStrip = (ViewGroup)findViewById(R.id.suggestions_strip);
         mVoiceKey = (ImageButton)findViewById(R.id.suggestions_strip_voice_key);
         mImportantNoticeStrip = findViewById(R.id.important_notice_strip);
         mStripVisibilityGroup = new StripVisibilityGroup(this, mSuggestionsStrip,
                 mImportantNoticeStrip);
+        mComposingTextView = new TextView(context);
+        mComposingTextView.setBackgroundResource(R.drawable.composing_bubble_background);
+        mComposingTextView.setTextColor(getResources().getColor(R.color.composing_bubble_text));
+        mComposingTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        mComposingTextView.setSingleLine(true);
+        mComposingTextView.setEllipsize(TextUtils.TruncateAt.END);
+        mComposingTextView.setOnClickListener(this);
+        mComposingTextView.setVisibility(GONE);
+        final int bubbleMargin = (int)TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 6, getResources().getDisplayMetrics());
+        final int bubbleLift = (int)TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
+        final RelativeLayout.LayoutParams bubbleLayoutParams =
+                new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        bubbleLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_START);
+        bubbleLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        bubbleLayoutParams.setMargins(bubbleMargin, bubbleMargin, bubbleMargin, bubbleMargin);
+        addView(mComposingTextView, bubbleLayoutParams);
+        mComposingTextView.setTranslationY(-bubbleLift);
 
         for (int pos = 0; pos < SuggestedWords.MAX_SUGGESTIONS; pos++) {
             final TextView word = new TextView(context, null, R.attr.suggestionWordStyle);
@@ -207,6 +231,19 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         mStartIndexOfMoreSuggestions = mLayoutHelper.layoutAndReturnStartIndexOfMoreSuggestions(
                 getContext(), mSuggestedWords, mSuggestionsStrip, this);
         mStripVisibilityGroup.showSuggestionsStrip();
+    }
+
+    public void setComposingText(final String text) {
+        if (TextUtils.isEmpty(text)) {
+            mComposingText = "";
+            mComposingTextView.setText(null);
+            mComposingTextView.setVisibility(GONE);
+            return;
+        }
+        mComposingText = text;
+        mComposingTextView.setText(text);
+        mComposingTextView.setVisibility(VISIBLE);
+        mComposingTextView.bringToFront();
     }
 
     public void setMoreSuggestionsHeight(final int remainingHeight) {
@@ -503,6 +540,24 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
             mListener.onCodeInput(Constants.CODE_SHORTCUT,
                     Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE,
                     false /* isKeyRepeat */);
+            return;
+        }
+        if (view == mComposingTextView) {
+            if (mListener == null || TextUtils.isEmpty(mComposingText)) {
+                return;
+            }
+            SuggestedWordInfo wordInfo = mSuggestedWords.getTypedWordInfo();
+            if (wordInfo == null || !TextUtils.equals(wordInfo.mWord, mComposingText)) {
+                wordInfo = new SuggestedWordInfo(
+                        mComposingText,
+                        "" /* prevWordsContext */,
+                        SuggestedWordInfo.MAX_SCORE,
+                        SuggestedWordInfo.KIND_TYPED,
+                        Dictionary.DICTIONARY_USER_TYPED,
+                        SuggestedWordInfo.NOT_AN_INDEX,
+                        SuggestedWordInfo.NOT_A_CONFIDENCE);
+            }
+            mListener.pickSuggestionManually(wordInfo);
             return;
         }
 
