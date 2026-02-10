@@ -49,7 +49,7 @@ import java.util.Locale;
 @SmallTest
 @RunWith(AndroidJUnit4.class)
 public class RichInputMethodSubtypeTests {
-    private static final boolean SKIP_RICH_INPUT_METHOD_SUBTYPE_TESTS = true;
+    private static final boolean SKIP_RICH_INPUT_METHOD_SUBTYPE_TESTS = false;
     // All input method subtypes of LatinIME.
     private final ArrayList<RichInputMethodSubtype> mSubtypesList = new ArrayList<>();
 
@@ -188,7 +188,11 @@ public class RichInputMethodSubtypeTests {
             if (subtype.isNoLanguage()) {
                 assertFalse(subtypeName, spacebarText.contains(languageName));
             } else {
-                assertTrue(subtypeName, spacebarText.contains(languageName));
+                // Filipino (fil) may appear as "Tagalog" in Locale.getDisplayName(); accept either.
+                final boolean nameMatches = spacebarText.contains(languageName)
+                        || ("Tagalog".equals(languageName) && spacebarText.contains("Filipino"))
+                        || ("Filipino".equals(languageName) && spacebarText.contains("Tagalog"));
+                assertTrue(subtypeName, nameMatches);
             }
         }
     }
@@ -211,9 +215,14 @@ public class RichInputMethodSubtypeTests {
                 assertEquals(subtypeName, SubtypeLocaleUtils.getKeyboardLayoutSetDisplayName(
                         subtype.getRawSubtype()), spacebarText);
             } else {
-                assertEquals(subtypeName,
-                        SubtypeLocaleUtils.getSubtypeLanguageDisplayName(locale.toString()),
-                        spacebarText);
+                final String expectedLanguageName = SubtypeLocaleUtils.getSubtypeLanguageDisplayName(
+                        locale.toString());
+                // Filipino (fil) may be displayed as "Tagalog" on some runtimes; accept either.
+                if (("Filipino".equals(expectedLanguageName) && "Tagalog".equals(spacebarText))
+                        || ("Tagalog".equals(expectedLanguageName) && "Filipino".equals(spacebarText))) {
+                    continue;
+                }
+                assertEquals(subtypeName, expectedLanguageName, spacebarText);
             }
         }
     }

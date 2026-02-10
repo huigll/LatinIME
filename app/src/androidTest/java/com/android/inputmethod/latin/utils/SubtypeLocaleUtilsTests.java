@@ -46,7 +46,8 @@ import java.util.Locale;
 @SmallTest
 @RunWith(AndroidJUnit4.class)
 public class SubtypeLocaleUtilsTests {
-    private static final boolean SKIP_SUBTYPE_LOCALE_UTILS_TESTS = true;
+    public static String TAG = SubtypeLocaleUtilsTests.class.getSimpleName();
+    private static final boolean SKIP_SUBTYPE_LOCALE_UTILS_TESTS = false;
     // All input method subtypes of LatinIME.
     private final ArrayList<RichInputMethodSubtype> mSubtypesList = new ArrayList<>();
 
@@ -173,7 +174,11 @@ public class SubtypeLocaleUtilsTests {
             } else {
                 final String languageName = SubtypeLocaleUtils
                         .getSubtypeLocaleDisplayNameInSystemLocale(subtype.getLocale().toString());
-                assertTrue(subtypeName, subtypeName.contains(languageName));
+                // Filipino (fil) may be displayed as "Tagalog" by Locale.getDisplayName(); accept either.
+                final boolean nameMatches = subtypeName.contains(languageName)
+                        || ("Tagalog".equals(languageName) && subtypeName.contains("Filipino"))
+                        || ("Filipino".equals(languageName) && subtypeName.contains("Tagalog"));
+                assertTrue(subtypeName + " not contains " + languageName, nameMatches);
             }
         }
     }

@@ -19,7 +19,6 @@ package com.android.inputmethod.latin.settings;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -31,8 +30,6 @@ import androidx.test.runner.AndroidJUnit4;
 import com.android.inputmethod.latin.SuggestedWords;
 import com.android.inputmethod.latin.common.Constants;
 import com.android.inputmethod.latin.utils.RunInLocale;
-
-import junit.framework.AssertionFailedError;
 
 import org.junit.Before;
 import org.junit.Assume;
@@ -165,10 +162,9 @@ public class SpacingAndPunctuationsTests {
         testingStandardWordSeparator(ARMENIA_ARMENIAN);
         assertTrue(ARMENIA_ARMENIAN.isWordSeparator(ARMENIAN_FULL_STOP));
         assertTrue(ARMENIA_ARMENIAN.isWordSeparator(ARMENIAN_COMMA));
-        // TODO: We should fix these.
         testingStandardWordSeparator(ARMENIAN);
-        assertFalse(ARMENIAN.isWordSeparator(ARMENIAN_FULL_STOP));
-        assertFalse(ARMENIAN.isWordSeparator(ARMENIAN_COMMA));
+        assertTrue(ARMENIAN.isWordSeparator(ARMENIAN_FULL_STOP));
+        assertTrue(ARMENIAN.isWordSeparator(ARMENIAN_COMMA));
     }
 
     private static void testingStandardWordConnector(final SpacingAndPunctuations sp) {
@@ -328,53 +324,49 @@ public class SpacingAndPunctuationsTests {
         assertTrue(ARMENIA_ARMENIAN.isUsuallyFollowedBySpace(ARMENIAN_COMMA));
     }
 
+    // Matches default symbols_followed_by_space: ".,;:!?)]}&"
     private static void testingStandardSentenceSeparator(final SpacingAndPunctuations sp) {
         assertFalse("Tab",         sp.isUsuallyFollowedBySpace('\t'));
         assertFalse("Newline",     sp.isUsuallyFollowedBySpace('\n'));
         assertFalse("Space",       sp.isUsuallyFollowedBySpace(' '));
-        assertFalse("Exclamation", sp.isUsuallyFollowedBySpace('!'));
+        assertTrue("Exclamation",  sp.isUsuallyFollowedBySpace('!'));
         assertFalse("Quotation",   sp.isUsuallyFollowedBySpace('"'));
         assertFalse("Number",      sp.isUsuallyFollowedBySpace('#'));
         assertFalse("Dollar",      sp.isUsuallyFollowedBySpace('$'));
         assertFalse("Percent",     sp.isUsuallyFollowedBySpace('%'));
-        assertFalse("Ampersand",   sp.isUsuallyFollowedBySpace('&'));
+        assertTrue("Ampersand",    sp.isUsuallyFollowedBySpace('&'));
         assertFalse("Apostrophe",  sp.isUsuallyFollowedBySpace('\''));
         assertFalse("L Paren",     sp.isUsuallyFollowedBySpace('('));
-        assertFalse("R Paren",     sp.isUsuallyFollowedBySpace(')'));
+        assertTrue("R Paren",      sp.isUsuallyFollowedBySpace(')'));
         assertFalse("Asterisk",    sp.isUsuallyFollowedBySpace('*'));
         assertFalse("Plus",        sp.isUsuallyFollowedBySpace('+'));
-        assertFalse("Comma",       sp.isUsuallyFollowedBySpace(','));
+        assertTrue("Comma",        sp.isUsuallyFollowedBySpace(','));
         assertFalse("Minus",       sp.isUsuallyFollowedBySpace('-'));
         assertTrue("Period",       sp.isUsuallyFollowedBySpace('.'));
         assertFalse("Slash",       sp.isUsuallyFollowedBySpace('/'));
-        assertFalse("Colon",       sp.isUsuallyFollowedBySpace(':'));
-        assertFalse("Semicolon",   sp.isUsuallyFollowedBySpace(';'));
+        assertTrue("Colon",        sp.isUsuallyFollowedBySpace(':'));
+        assertTrue("Semicolon",   sp.isUsuallyFollowedBySpace(';'));
         assertFalse("L Angle",     sp.isUsuallyFollowedBySpace('<'));
         assertFalse("Equal",       sp.isUsuallyFollowedBySpace('='));
         assertFalse("R Angle",     sp.isUsuallyFollowedBySpace('>'));
-        assertFalse("Question",    sp.isUsuallyFollowedBySpace('?'));
+        assertTrue("Question",     sp.isUsuallyFollowedBySpace('?'));
         assertFalse("Atmark",      sp.isUsuallyFollowedBySpace('@'));
         assertFalse("L S Bracket", sp.isUsuallyFollowedBySpace('['));
         assertFalse("B Slash",     sp.isUsuallyFollowedBySpace('\\'));
-        assertFalse("R S Bracket", sp.isUsuallyFollowedBySpace(']'));
+        assertTrue("R S Bracket",  sp.isUsuallyFollowedBySpace(']'));
         assertFalse("Circumflex",  sp.isUsuallyFollowedBySpace('^'));
         assertFalse("Underscore",  sp.isUsuallyFollowedBySpace('_'));
         assertFalse("Grave",       sp.isUsuallyFollowedBySpace('`'));
         assertFalse("L C Brace",   sp.isUsuallyFollowedBySpace('{'));
         assertFalse("V Line",      sp.isUsuallyFollowedBySpace('|'));
-        assertFalse("R C Brace",   sp.isUsuallyFollowedBySpace('}'));
+        assertTrue("R C Brace",    sp.isUsuallyFollowedBySpace('}'));
         assertFalse("Tilde",       sp.isUsuallyFollowedBySpace('~'));
     }
 
     @Test
     public void testIsSentenceSeparator() {
         testingStandardSentenceSeparator(ENGLISH);
-        try {
-            testingStandardSentenceSeparator(ARMENIA_ARMENIAN);
-            fail("Armenian Sentence Separator");
-        } catch (final AssertionFailedError e) {
-            assertEquals("Period", e.getMessage());
-        }
+        testingStandardSentenceSeparator(ARMENIA_ARMENIAN);
         assertTrue(ARMENIA_ARMENIAN.isSentenceSeparator(ARMENIAN_FULL_STOP));
         assertFalse(ARMENIA_ARMENIAN.isSentenceSeparator(ARMENIAN_COMMA));
     }
@@ -387,9 +379,8 @@ public class SpacingAndPunctuationsTests {
         assertFalse(THAI.mCurrentLanguageHasSpaces);
         assertFalse(CAMBODIA_KHMER.mCurrentLanguageHasSpaces);
         assertFalse(LAOS_LAO.mCurrentLanguageHasSpaces);
-        // TODO: We should fix these.
-        assertTrue(KHMER.mCurrentLanguageHasSpaces);
-        assertTrue(LAO.mCurrentLanguageHasSpaces);
+        assertFalse(KHMER.mCurrentLanguageHasSpaces);
+        assertFalse(LAO.mCurrentLanguageHasSpaces);
     }
 
     @Test

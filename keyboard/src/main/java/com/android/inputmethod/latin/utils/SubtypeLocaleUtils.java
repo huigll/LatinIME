@@ -150,17 +150,32 @@ public final class SubtypeLocaleUtils {
     }
 
     public static boolean isExceptionalLocale(final String localeString) {
-        return sExceptionalLocaleToNameIdsMap.containsKey(localeString);
+        return sExceptionalLocaleToNameIdsMap.containsKey(normalizeLocaleStringForLookup(localeString));
     }
 
     private static final String getNoLanguageLayoutKey(final String keyboardLayoutName) {
         return NO_LANGUAGE + "_" + keyboardLayoutName;
     }
 
+    /**
+     * Normalizes a locale string for map lookup. Map keys use "sr_ZZ" (language lowercase,
+     * country uppercase), but Locale.toString() can return "sr_zz", so lookup fails.
+     */
+    @Nonnull
+    private static String normalizeLocaleStringForLookup(@Nonnull final String localeString) {
+        final int underscore = localeString.indexOf('_');
+        if (underscore < 0) {
+            return localeString;
+        }
+        return localeString.substring(0, underscore).toLowerCase(Locale.ROOT)
+                + "_" + localeString.substring(underscore + 1).toUpperCase(Locale.ROOT);
+    }
+
     public static int getSubtypeNameId(final String localeString, final String keyboardLayoutName) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN
                 && isExceptionalLocale(localeString)) {
-            return sExceptionalLocaleToWithLayoutNameIdsMap.get(localeString);
+            return sExceptionalLocaleToWithLayoutNameIdsMap.get(
+                    normalizeLocaleStringForLookup(localeString));
         }
         final String key = NO_LANGUAGE.equals(localeString)
                 ? getNoLanguageLayoutKey(keyboardLayoutName)
@@ -174,7 +189,8 @@ public final class SubtypeLocaleUtils {
         if (NO_LANGUAGE.equals(localeString)) {
             return sResources.getConfiguration().locale;
         }
-        if (sExceptionalLocaleDisplayedInRootLocale.containsKey(localeString)) {
+        if (sExceptionalLocaleDisplayedInRootLocale.containsKey(
+                normalizeLocaleStringForLookup(localeString))) {
             return Locale.ROOT;
         }
         return LocaleUtils.constructLocaleFromString(localeString);
@@ -196,7 +212,8 @@ public final class SubtypeLocaleUtils {
     public static String getSubtypeLanguageDisplayName(@Nonnull final String localeString) {
         final Locale displayLocale = getDisplayLocaleOfSubtypeLocale(localeString);
         final String languageString;
-        if (sExceptionalLocaleDisplayedInRootLocale.containsKey(localeString)) {
+        if (sExceptionalLocaleDisplayedInRootLocale.containsKey(
+                normalizeLocaleStringForLookup(localeString))) {
             languageString = localeString;
         } else {
             languageString = LocaleUtils.constructLocaleFromString(localeString).getLanguage();
@@ -211,12 +228,13 @@ public final class SubtypeLocaleUtils {
             // No language subtype should be displayed in system locale.
             return sResources.getString(R.string.subtype_no_language);
         }
+        final String lookupKey = normalizeLocaleStringForLookup(localeString);
         final Integer exceptionalNameResId;
         if (displayLocale.equals(Locale.ROOT)
-                && sExceptionalLocaleDisplayedInRootLocale.containsKey(localeString)) {
-            exceptionalNameResId = sExceptionalLocaleDisplayedInRootLocale.get(localeString);
-        } else if (sExceptionalLocaleToNameIdsMap.containsKey(localeString)) {
-            exceptionalNameResId = sExceptionalLocaleToNameIdsMap.get(localeString);
+                && sExceptionalLocaleDisplayedInRootLocale.containsKey(lookupKey)) {
+            exceptionalNameResId = sExceptionalLocaleDisplayedInRootLocale.get(lookupKey);
+        } else if (sExceptionalLocaleToNameIdsMap.containsKey(lookupKey)) {
+            exceptionalNameResId = sExceptionalLocaleToNameIdsMap.get(lookupKey);
         } else {
             exceptionalNameResId = null;
         }
