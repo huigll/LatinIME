@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+** Copyright 2013, The Android Open Source Project
+** Licensed under the Apache License, Version 2.0
+-->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="setupTitleStyle" parent="setupTitleStyleCommon" />
+    <style name="setupStepActionLabelStyle" parent="setupStepActionLabelStyleCommon" />
+</resources>
