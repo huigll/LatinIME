@@ -35,7 +35,6 @@ import com.android.inputmethod.dictionarypack.DictionaryPackConstants;
 import com.android.inputmethod.dictionarypack.DownloadManagerWrapper;
 import com.android.inputmethod.keyboard.KeyboardLayoutSet;
 import com.android.inputmethod.latin.settings.Settings;
-import com.android.inputmethod.latin.setup.SetupActivity;
 import com.android.inputmethod.latin.utils.UncachedInputMethodManagerUtils;
 
 /**
@@ -64,6 +63,12 @@ import com.android.inputmethod.latin.utils.UncachedInputMethodManagerUtils;
  */
 public final class SystemBroadcastReceiver extends BroadcastReceiver {
     private static final String TAG = SystemBroadcastReceiver.class.getSimpleName();
+
+    /**
+     * Use a string reference to avoid a hard compile-time dependency on the setup module.
+     */
+    private static final String SETUP_ACTIVITY_CLASS_NAME =
+            "com.android.inputmethod.latin.setup.SetupActivity";
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
@@ -149,11 +154,25 @@ public final class SystemBroadcastReceiver extends BroadcastReceiver {
             Log.i(TAG, "toggleAppIcon() : FLAG_SYSTEM = " + isSystemApp);
         }
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        context.getPackageManager().setComponentEnabledSetting(
-                new ComponentName(context, SetupActivity.class),
-                Settings.readShowSetupWizardIcon(prefs, context)
-                        ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                        : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP);
+
+        final String className;
+        if (SETUP_ACTIVITY_CLASS_NAME.startsWith(".")) {
+            className = context.getPackageName() + SETUP_ACTIVITY_CLASS_NAME;
+        } else {
+            className = SETUP_ACTIVITY_CLASS_NAME;
+        }
+
+        try {
+            context.getPackageManager().setComponentEnabledSetting(
+                    new ComponentName(context.getPackageName(), className),
+                    Settings.readShowSetupWizardIcon(prefs, context)
+                            ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                            : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+        } catch (RuntimeException e) {
+            // If the component isn't present due to manifest/product changes, don't crash the
+            // broadcast receiver process.
+            Log.w(TAG, "Failed to toggle setup activity icon for component: " + className, e);
+        }
     }
 }
