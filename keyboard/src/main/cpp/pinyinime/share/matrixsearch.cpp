@@ -606,6 +606,10 @@ char16* MatrixSearch::get_candidate(size_t cand_id, char16 *cand_str,
   if (!inited_ || 0 == pys_decoded_len_ || NULL == cand_str)
     return NULL;
 
+  const size_t cand_num = get_candidate_num();
+  if (cand_id >= cand_num)
+    return NULL;
+
   if (0 == cand_id) {
     return get_candidate0(cand_str, max_len, NULL, false);
   } else {
