@@ -21,7 +21,7 @@ import android.view.inputmethod.InputMethodSubtype;
 
 import androidx.test.filters.LargeTest;
 
-import com.android.inputmethod.latin.R;
+import com.android.inputmethod.latin.app.R;
 import com.android.inputmethod.latin.utils.SubtypeLocaleUtils;
 
 @LargeTest

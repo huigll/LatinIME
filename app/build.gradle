@@ -4,7 +4,7 @@ def enableAsan = project.findProperty('latinime.enableAsan') ?: 'false'
 def asanEnabled = enableAsan.toString().toLowerCase() == 'true'
 
 android {
-    namespace 'com.android.inputmethod.latin'
+    namespace 'com.android.inputmethod.latin.app'
     testNamespace 'com.android.inputmethod.latin.tests'
     compileSdkVersion 34
 

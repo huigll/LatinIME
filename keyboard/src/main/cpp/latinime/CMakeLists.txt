@@ -10,7 +10,8 @@ if(LATINIME_ENABLE_ASAN)
     message(STATUS "LatinIME: AddressSanitizer (ASAN) enabled for memory debugging")
 endif()
 
-# 16 KB page alignment for compatibility with 16 KB page size devices (Android 15+)
+# 16 KB page alignment for Android 15/16 (Google Play requirement from Nov 2025)
+# NDK r27+ uses -DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON from Gradle; this is fallback for older NDK
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
 
 file(GLOB_RECURSE LATIN_IME_CORE_SRC

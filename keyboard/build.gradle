@@ -22,9 +22,10 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17"
-                if (asanEnabled) {
-                    arguments "-DLATINIME_ENABLE_ASAN=ON"
-                }
+                // 16KB page alignment for Android 15+/16 (required by Google Play)
+                def cmakeArgs = ["-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"]
+                if (asanEnabled) cmakeArgs.add("-DLATINIME_ENABLE_ASAN=ON")
+                arguments(*cmakeArgs)
             }
         }
         ndk {

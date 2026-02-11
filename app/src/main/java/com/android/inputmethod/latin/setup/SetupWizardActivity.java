@@ -35,7 +35,7 @@ import android.widget.VideoView;
 
 import com.android.inputmethod.compat.TextViewCompatUtils;
 import com.android.inputmethod.compat.ViewCompatUtils;
-import com.android.inputmethod.latin.R;
+import com.android.inputmethod.latin.app.R;
 import com.android.inputmethod.latin.settings.SettingsActivity;
 import com.android.inputmethod.latin.utils.LeakGuardHandlerWrapper;
 import com.android.inputmethod.latin.utils.UncachedInputMethodManagerUtils;
@@ -217,7 +217,7 @@ public final class SetupWizardActivity extends Activity implements View.OnClickL
         mWelcomeVideoView = welcomeVideoView;
         mWelcomeImageView = (ImageView)findViewById(R.id.setup_welcome_image);
 
-        mActionStart = findViewById(R.id.setup_start_label);
+        mActionStart = findViewById(com.android.inputmethod.latin.R.id.setup_start_label);
         mActionStart.setOnClickListener(this);
         mActionNext = findViewById(R.id.setup_next);
         mActionNext.setOnClickListener(this);
