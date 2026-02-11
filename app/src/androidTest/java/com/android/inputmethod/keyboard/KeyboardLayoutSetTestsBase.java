@@ -28,7 +28,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.inputmethod.compat.InputMethodSubtypeCompatUtils;
 import com.android.inputmethod.keyboard.KeyboardLayoutSet.Builder;
-import com.android.inputmethod.latin.app.R;
+import com.android.inputmethod.latin.R;
 import com.android.inputmethod.latin.RichInputMethodManager;
 import com.android.inputmethod.latin.RichInputMethodSubtype;
 import com.android.inputmethod.latin.common.Constants;
