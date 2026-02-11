@@ -333,7 +333,9 @@ public final class InputLogic {
     private void commitPinyinText(final String text) {
         mConnection.commitText(text, 1);
         mConnection.finishComposingText();
-        mEnteredText = text;
+        // Don't set mEnteredText for Pinyin - backspace should delete char by char, not revert
+        // the whole committed candidate (unlike .com key which inputs multiple chars at once).
+        mEnteredText = null;
         mWordBeingCorrectedByCursor = null;
         mSpaceState = SpaceState.NONE;
         resetPinyinState();
@@ -477,7 +479,8 @@ public final class InputLogic {
 
             if (consumedLen > 0 && consumedLen < fullLen) {
                 mConnection.commitText(commit, 1);
-                mEnteredText = commit;
+                // Don't set mEnteredText - backspace should delete char by char
+                mEnteredText = null;
                 mWordBeingCorrectedByCursor = null;
                 mSpaceState = SpaceState.NONE;
 

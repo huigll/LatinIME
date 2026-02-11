@@ -18,6 +18,7 @@ package com.android.inputmethod.latin;
 
 import androidx.test.filters.LargeTest;
 
+import com.android.inputmethod.latin.common.Constants;
 import com.android.inputmethod.latin.SuggestedWords;
 @LargeTest
 public class PinyinLanguageSwitchTests extends InputTestsBase {
@@ -52,6 +53,31 @@ public class PinyinLanguageSwitchTests extends InputTestsBase {
         pickSuggestionManually("特");
         runMessages();
         assertEquals("卡比特", mEditText.getText().toString().trim());
+    }
+
+    /**
+     * Backspace after Pinyin candidate commit should delete char-by-char, not the whole candidate.
+     * Bug: previously "啊啊并不" + backspace would delete "并不" instead of just "不".
+     */
+    public void testPinyinBackspaceDeletesCharByChar() {
+        changeLanguage(LANGUAGE_ZH_CN);
+        type("aabb");
+        runMessages();
+        pickSuggestionManually("啊啊");
+        runMessages();
+        pickSuggestionManually("并不");
+        runMessages();
+        assertEquals("啊啊并不", mEditText.getText().toString().trim());
+
+        type(Constants.CODE_DELETE);
+        runMessages();
+        assertEquals("backspace deletes one char, not whole candidate", "啊啊并",
+                mEditText.getText().toString().trim());
+
+        type(Constants.CODE_DELETE);
+        runMessages();
+        assertEquals("backspace deletes one char at a time", "啊啊",
+                mEditText.getText().toString().trim());
     }
 
     public void testPinyinCommitThenSwitchToEnglishShowsSuggestions() {
