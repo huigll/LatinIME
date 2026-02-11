@@ -10,5 +10,6 @@ local.properties
 **/.externalNativeBuild/
 **/.cxx/
 
-# ASAN wrap.sh (generated when building with -Platinime.enableAsan=true)
+# ASAN (generated when building with latinime.enableAsan=true)
 app/src/main/resources/lib/
+app/src/main/jniLibs/
