@@ -101,13 +101,9 @@ public final class InputAttributes {
 
         // TODO: Have a helper method in InputTypeUtils
         // Make sure that passwords are not displayed in {@link SuggestionStripView}.
-        // Note: flagAutoComplete is NOT included - Gboard shows IME candidates even when the
-        // app provides AutoComplete, so we match that behavior.
-        final boolean shouldSuppressSuggestions = mIsPasswordField
-                || InputTypeUtils.isEmailVariation(variation)
-                || InputType.TYPE_TEXT_VARIATION_URI == variation
-                || InputType.TYPE_TEXT_VARIATION_FILTER == variation
-                || flagNoSuggestions;
+        // Relaxed for non-Chinese mode: only password suppresses suggestions. Show candidates
+        // for email, URI, filter, and even when app sets NO_SUGGESTIONS (Gboard-like behavior).
+        final boolean shouldSuppressSuggestions = mIsPasswordField;
         mShouldShowSuggestions = !shouldSuppressSuggestions;
 
         mShouldInsertSpacesAutomatically = InputTypeUtils.isAutoSpaceFriendlyType(inputType);
