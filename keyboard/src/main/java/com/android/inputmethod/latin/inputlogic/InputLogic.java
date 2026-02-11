@@ -258,6 +258,9 @@ public final class InputLogic {
         if (mPinyinComposing.length() > 0) {
             mConnection.finishComposingText();
         }
+        if (mPinyinDecoder != null) {
+            mPinyinDecoder.reset();
+        }
         mPinyinComposing.setLength(0);
         mPinyinCandidates = new ArrayList<>();
         mPinyinSuggestedWords = SuggestedWords.getEmptyInstance();

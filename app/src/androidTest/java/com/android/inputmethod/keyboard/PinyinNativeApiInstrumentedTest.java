@@ -16,7 +16,9 @@ import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -130,7 +132,50 @@ public class PinyinNativeApiInstrumentedTest {
         assertTrue(PinyinDecoder.nativeImCloseDecoder());
     }
 
+    /**
+     * Regression test: after choose() the decoder state is "fixed" to that candidate.
+     * Without reset, the next search for the same pinyin returns the fixed result (e.g. all "说").
+     * InputLogic must call decoder.reset() on commit so that the next typing gets fresh candidates.
+     */
+    @Test
+    public void search_after_choose_without_reset_returns_fixed_result_reset_restores_variety() throws Exception {
+        assertTrue(openDecoder(context));
+        PinyinDecoder.nativeImSetMaxLens(64, 64);
+        PinyinDecoder.nativeImResetSearch();
 
+        byte[] bufS = buildPinyinBuffer("s");
+        int count1 = PinyinDecoder.nativeImSearch(bufS, bufS.length - 1);
+        Assume.assumeTrue("need at least one candidate for 's'", count1 > 0);
+
+        String firstChoice = PinyinDecoder.nativeImGetChoice(0);
+        assertNotNull(firstChoice);
+        assertFalse(firstChoice.trim().isEmpty());
+
+        PinyinDecoder.nativeImChoose(0);
+
+        // Search same key again WITHOUT reset: engine may return only the fixed candidate.
+        int count2 = PinyinDecoder.nativeImSearch(bufS, bufS.length - 1);
+        Set<String> withoutReset = new HashSet<>();
+        for (int i = 0; i < count2; i++) {
+            String c = PinyinDecoder.nativeImGetChoice(i);
+            if (c != null && !c.trim().isEmpty()) {
+                withoutReset.add(c.trim());
+            }
+        }
+
+        PinyinDecoder.nativeImResetSearch();
+        int count3 = PinyinDecoder.nativeImSearch(bufS, bufS.length - 1);
+        Set<String> afterReset = new HashSet<>();
+        for (int i = 0; i < count3; i++) {
+            String c = PinyinDecoder.nativeImGetChoice(i);
+            if (c != null && !c.trim().isEmpty()) {
+                afterReset.add(c.trim());
+            }
+        }
+
+        assertTrue("After reset, same pinyin must yield multiple distinct candidates (was: " + afterReset + ")",
+                afterReset.size() >= 2);
+    }
 
 
 
