@@ -48,7 +48,9 @@ public class InputLogicTests extends InputTestsBase {
         final String WORD_TO_TYPE = "abcd";
         type(WORD_TO_TYPE);
         assertComposingText("type word shows composing bubble", WORD_TO_TYPE);
-        assertEquals("type word does not write to editor", "", mEditText.getText().toString());
+        // Gboard style: composing text is shown in editor for Latin/English
+        assertEquals("type word shows in editor while composing", WORD_TO_TYPE,
+                mEditText.getText().toString());
         commitComposingText();
         assertEquals("type word then commit", WORD_TO_TYPE, mEditText.getText().toString());
     }
@@ -743,12 +745,14 @@ public class InputLogicTests extends InputTestsBase {
         typeWordAndPutCursorInside(WORD_TO_TYPE, 0 /* startPos */);
         type(" ");
         ensureComposingSpanPos("space while in the middle of a word cancels composition", -1, -1);
-        assertEquals("space in the middle of a composing word", " ",
+        // Gboard style: space in the middle splits the word into "some" + " " + "thing"
+        assertEquals("space in the middle of a composing word", "some thing",
                 mEditText.getText().toString());
         int cursorPos = sendUpdateForCursorMoveToEndOfLine();
         runMessages();
         type(" ");
-        assertEquals("mbo", "  ", mEditText.getText().toString());
+        assertEquals("space at end of line", "some thing ",
+                mEditText.getText().toString());
         typeWordAndPutCursorInside(WORD_TO_TYPE, cursorPos + 1 /* startPos */);
         type(Constants.CODE_DELETE);
         ensureComposingSpanPos("delete while in the middle of a word cancels composition", -1, -1);

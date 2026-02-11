@@ -16,9 +16,6 @@
 
 package com.android.inputmethod.latin;
 
-import android.text.style.SuggestionSpan;
-import android.text.style.UnderlineSpan;
-
 import androidx.test.filters.LargeTest;
 
 import com.android.inputmethod.latin.common.Constants;
@@ -32,8 +29,9 @@ public class BlueUnderlineTests extends InputTestsBase {
         sleep(DELAY_TO_WAIT_FOR_UNDERLINE_MILLIS);
         runMessages();
         assertComposingText("composing bubble shows typed word", STRING_TO_TYPE);
-        final SpanGetter span = new SpanGetter(mEditText.getText(), SuggestionSpan.class);
-        assertNull("no suggestion span in editor while composing", span.mSpan);
+        // Gboard style: composing text is shown in editor for Latin/English
+        assertEquals("composing text shown in editor", STRING_TO_TYPE,
+                mEditText.getText().toString());
     }
 
     public void testBlueUnderlineDisappears() {
@@ -46,8 +44,9 @@ public class BlueUnderlineTests extends InputTestsBase {
         assertComposingText("composing bubble extends typed word", STRING_1_TO_TYPE + STRING_2_TO_TYPE);
         sleep(DELAY_TO_WAIT_FOR_UNDERLINE_MILLIS);
         runMessages();
-        final SpanGetter spanAfter = new SpanGetter(mEditText.getText(), SuggestionSpan.class);
-        assertNull("no suggestion span in editor while composing", spanAfter.mSpan);
+        // Gboard style: composing text is shown in editor for Latin/English
+        assertEquals("composing text in editor", STRING_1_TO_TYPE + STRING_2_TO_TYPE,
+                mEditText.getText().toString());
     }
 
     public void testBlueUnderlineOnBackspace() {
@@ -76,7 +75,9 @@ public class BlueUnderlineTests extends InputTestsBase {
                 NEW_CURSOR_POSITION, NEW_CURSOR_POSITION, -1, -1);
         sleep(DELAY_TO_WAIT_FOR_UNDERLINE_MILLIS);
         runMessages();
-        assertComposingText("composing bubble clears when cursor moves", "");
+        // When cursor moves, composition is committed. Gboard style: editor keeps the text.
+        assertEquals("committed text in editor after cursor move", STRING_TO_TYPE,
+                mEditText.getText().toString());
     }
 
     public void testComposingStopsOnSpace() {
