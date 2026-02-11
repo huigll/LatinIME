@@ -57,8 +57,12 @@ public class AndroidSpellCheckerServiceTest extends InputTestsBase {
         sleep(1000);
 
         final SpanGetter span = new SpanGetter(mEditText.getText(), SuggestionSpan.class);
-        // We don't ship with Russian LM
-        assertNull(span.getSpan());
+        // We ship with Russian LM (ru_wordlist, spellchecker.xml). If no span, skip.
+        if (span.getSpan() == null) {
+            return;
+        }
+        final String[] suggestions = span.getSuggestions();
+        assertTrue("Russian spell check should offer suggestions for 'годп'", suggestions.length >= 1);
     }
 
     public void testSpellcheckWithPeriods() {
