@@ -76,7 +76,11 @@ import javax.annotation.Nonnull;
 public final class InputLogic {
     private static final String TAG = InputLogic.class.getSimpleName();
     private static final int PINYIN_MAX_CANDIDATES = 100;
-    private static final boolean SHOW_COMPOSING_TEXT_IN_EDITOR = false;
+    /**
+     * For Pinyin: composing text (pinyin letters) is not shown in the editor, only in suggestion
+     * strip. For Latin/English: composing text is shown in the editor with underline (Gboard style).
+     */
+    private static final boolean SHOW_COMPOSING_TEXT_IN_EDITOR_FOR_LATIN = true;
 
     // TODO : Remove this member when we can.
     final LatinIME mLatinIME;
@@ -2531,7 +2535,8 @@ public final class InputLogic {
         final String composingText = TextUtils.isEmpty(newComposingText)
                 ? "" : newComposingText.toString();
         mSuggestionStripViewAccessor.setComposingText(composingText);
-        if (!SHOW_COMPOSING_TEXT_IN_EDITOR) {
+        // Pinyin: don't show pinyin in editor. Latin/English: show composing text (Gboard style).
+        if (isPinyinComposing() || !SHOW_COMPOSING_TEXT_IN_EDITOR_FOR_LATIN) {
             mConnection.setComposingText("", newCursorPosition);
             return;
         }
