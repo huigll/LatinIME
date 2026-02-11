@@ -467,7 +467,22 @@ public final class InputLogic {
             mConnection.beginBatchEdit();
             final int index = mPinyinCandidates.indexOf(suggestion);
             final String commit = index >= 0 ? choosePinyinCandidate(index) : suggestion;
-            commitPinyinText(commit);
+            final int fullLen = mPinyinComposing.length();
+            final int consumedLen = (index >= 0 && mPinyinDecoder != null)
+                    ? mPinyinDecoder.getFixedPinyinLength() : fullLen;
+
+            if (consumedLen > 0 && consumedLen < fullLen) {
+                mConnection.commitText(commit, 1);
+                mEnteredText = commit;
+                mWordBeingCorrectedByCursor = null;
+                mSpaceState = SpaceState.NONE;
+
+                mPinyinComposing.delete(0, consumedLen);
+                mPinyinDecoder.reset();
+                updatePinyinComposingAndSuggestions();
+            } else {
+                commitPinyinText(commit);
+            }
             mConnection.endBatchEdit();
             inputTransaction.setDidAffectContents();
             inputTransaction.requireShiftUpdate(InputTransaction.SHIFT_UPDATE_NOW);

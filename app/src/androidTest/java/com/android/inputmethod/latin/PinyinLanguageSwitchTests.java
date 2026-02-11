@@ -24,6 +24,30 @@ public class PinyinLanguageSwitchTests extends InputTestsBase {
     private static final String LANGUAGE_ZH_CN = "zh_CN";
     private static final String LANGUAGE_EN_US = "en_US";
 
+    /**
+     * Type full pinyin "guanggu", pick candidate "光谷" in one selection, verify commit.
+     */
+    public void testPinyinGuangguSingleCommit() {
+        changeLanguage(LANGUAGE_ZH_CN);
+        type("guanggu");
+        runMessages();
+        pickSuggestionManually("光谷");
+        runMessages();
+        assertEquals("光谷", mEditText.getText().toString().trim());
+    }
+
+    /**
+     * Type full pinyin "kabite", pick candidate "卡比特" in one selection, verify commit.
+     */
+    public void testPinyinKabiteSingleCommit() {
+        changeLanguage(LANGUAGE_ZH_CN);
+        type("kabite");
+        runMessages();
+        pickSuggestionManually("卡比特");
+        runMessages();
+        assertEquals("卡比特", mEditText.getText().toString().trim());
+    }
+
     public void testPinyinCommitThenSwitchToEnglishShowsSuggestions() {
         changeLanguage(LANGUAGE_ZH_CN);
         type("ni");

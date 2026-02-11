@@ -447,6 +447,9 @@ class MatrixSearch {
   // Get the length of fixed Hanzis.
   size_t get_fixedlen();
 
+  // Get the number of pinyin characters consumed by the fixed part (after choose).
+  size_t get_fixed_pinyin_length();
+
   size_t get_predicts(const char16 fixed_buf[],
                       char16 predict_buf[][kMaxPredictSize + 1],
                       size_t buf_len);

@@ -94,6 +94,12 @@ Java_com_carbit_inappkeyboard_keyboard_PinyinDecoder_nativeImChoose(
     return (jint)im_choose(choiceId);
 }
 
+extern "C" JNIEXPORT jint JNICALL
+Java_com_carbit_inappkeyboard_keyboard_PinyinDecoder_nativeImGetFixedPinyinLength(
+        JNIEnv* /*env*/, jclass /*clazz*/) {
+    return (jint)im_get_fixed_pinyin_length();
+}
+
 static int registerFileDescriptorOffsets(JNIEnv* env) {
     jclass localClass = env->FindClass("java/io/FileDescriptor");
     if (!localClass) return JNI_FALSE;

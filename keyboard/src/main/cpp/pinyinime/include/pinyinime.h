@@ -177,6 +177,12 @@ extern "C" {
   size_t im_get_fixed_len();
 
   /**
+   * Get the number of pinyin characters consumed by the fixed part (after choose).
+   * Must be called after im_choose().
+   */
+  size_t im_get_fixed_pinyin_length();
+
+  /**
    * Cancel the input state and reset the search workspace.
    */
   bool im_cancel_input();

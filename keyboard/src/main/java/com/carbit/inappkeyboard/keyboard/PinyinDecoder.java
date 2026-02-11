@@ -47,6 +47,8 @@ public class PinyinDecoder implements IPinyinDecoder {
 
     public static native int nativeImChoose(int choiceId);
 
+    public static native int nativeImGetFixedPinyinLength();
+
     public PinyinDecoder(Context context) {
         this.context = context.getApplicationContext();
     }
@@ -163,6 +165,15 @@ public class PinyinDecoder implements IPinyinDecoder {
         String chosen = nativeImGetChoice(index);
         nativeImChoose(index);
         return chosen;
+    }
+
+    /**
+     * Returns the number of pinyin characters consumed by the last choose().
+     * Must be called immediately after choose() with no intervening search/reset.
+     */
+    public int getFixedPinyinLength() {
+        if (!inited) return 0;
+        return nativeImGetFixedPinyinLength();
     }
 
     public void close() {

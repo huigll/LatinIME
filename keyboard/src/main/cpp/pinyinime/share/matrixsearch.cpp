@@ -926,6 +926,12 @@ size_t MatrixSearch::get_fixedlen() {
   return fixed_hzs_;
 }
 
+size_t MatrixSearch::get_fixed_pinyin_length() {
+  if (!inited_ || 0 == pys_decoded_len_ || fixed_hzs_ == 0)
+    return 0;
+  return spl_start_[fixed_hzs_];
+}
+
 bool MatrixSearch::prepare_add_char(char ch) {
   if (pys_decoded_len_ >= kMaxRowNum - 1 ||
       (!spl_parser_->is_valid_to_parse(ch) && ch != '\''))

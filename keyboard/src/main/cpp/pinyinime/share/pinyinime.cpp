@@ -149,6 +149,13 @@ extern "C" {
     return matrix_search->get_fixedlen();
   }
 
+  size_t im_get_fixed_pinyin_length() {
+    if (NULL == matrix_search)
+      return 0;
+
+    return matrix_search->get_fixed_pinyin_length();
+  }
+
   // To be removed
   bool im_cancel_input() {
     return true;
