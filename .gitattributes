@@ -17,6 +17,7 @@
 *.a binary
 *.o binary
 *.dat binary
+*.dict binary
 *.mp3 binary
 *.mp4 binary
 *.webm binary
