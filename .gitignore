@@ -9,3 +9,6 @@ local.properties
 **/build/
 **/.externalNativeBuild/
 **/.cxx/
+
+# ASAN wrap.sh (generated when building with -Platinime.enableAsan=true)
+app/src/main/resources/lib/

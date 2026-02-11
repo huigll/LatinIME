@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+def enableAsan = project.findProperty('latinime.enableAsan') ?: 'false'
+def asanEnabled = enableAsan.toString().toLowerCase() == 'true'
+
 android {
     namespace 'com.android.inputmethod.latin'
     testNamespace 'com.android.inputmethod.latin.tests'
@@ -37,6 +40,14 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
+            // ASAN requires useLegacyPackaging for wrap.sh to work (API 27+)
+            if (asanEnabled) {
+                packagingOptions {
+                    jniLibs {
+                        useLegacyPackaging = true
+                    }
+                }
+            }
         }
         release {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), '../java/proguard.flags'
@@ -59,6 +70,60 @@ android {
         noCompress 'dict', 'dat'
     }
 
+}
+
+// Copy ASAN runtime (wrap.sh + libclang_rt.asan-*.so) from NDK when ASAN is enabled
+if (asanEnabled) {
+    def asanJniDir = file("$buildDir/asanJniLibs")
+    task setupAsanRuntime {
+        outputs.dir asanJniDir
+        doLast {
+            def ndkDir = android.ndkDirectory?.absolutePath ?: System.getenv('ANDROID_NDK_HOME')
+            if (!ndkDir) {
+                logger.warn('LatinIME ASAN: NDK path not found. Set ANDROID_NDK_HOME or ensure NDK is installed.')
+                return
+            }
+            def asanSh = file("$ndkDir/wrap.sh/asan.sh")
+            if (!asanSh.exists()) {
+                logger.warn("LatinIME ASAN: wrap.sh not found at $asanSh")
+                return
+            }
+            def abis = ['arm64-v8a', 'armeabi-v7a', 'x86_64']
+            def archMap = ['arm64-v8a': 'aarch64', 'armeabi-v7a': 'arm', 'x86_64': 'x86_64']
+            def prebuilt = file("$ndkDir/toolchains/llvm/prebuilt")
+            def hostDir = prebuilt?.listFiles()?.find { it.isDirectory() }
+            def linuxDir = hostDir ? file("$hostDir/lib64/clang").listFiles()?.findResult { ver ->
+                def d = file("$ver/lib/linux")
+                return d.exists() ? d : null
+            } : null
+            // wrap.sh must be in src/main/resources/lib/<abi>/ per Android doc
+            def mainResLib = file("${projectDir}/src/main/resources/lib")
+            abis.each { abi ->
+                def resDir = file("$mainResLib/$abi")
+                resDir.mkdirs()
+                project.copy {
+                    from asanSh
+                    into resDir
+                    rename 'asan.sh', 'wrap.sh'
+                }
+                def arch = archMap[abi] ?: abi
+                def asanSo = linuxDir ? file("$linuxDir/libclang_rt.asan-$arch-android.so") : null
+                if (asanSo?.exists()) {
+                    def jniDir = file("$asanJniDir/$abi")
+                    jniDir.mkdirs()
+                    project.copy { from asanSo; into jniDir }
+                } else {
+                    logger.lifecycle("LatinIME ASAN: libclang_rt.asan-$arch-android.so not in NDK; may use static ASAN.")
+                }
+            }
+        }
+    }
+    android.sourceSets.debug.jniLibs.srcDirs += asanJniDir
+    tasks.whenTaskAdded { task ->
+        if (task.name == 'mergeDebugJniLibFolders' || task.name == 'mergeDebugResources') {
+            task.dependsOn setupAsanRuntime
+        }
+    }
 }
 
 dependencies {

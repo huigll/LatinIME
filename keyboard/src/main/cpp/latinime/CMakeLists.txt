@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.10.2)
 project(jni_latinime)
 
+# AddressSanitizer (ASAN) - enable via -Platinime.enableAsan=true when building
+# Detects: buffer overflows, use-after-free, use-after-return, memory leaks
+if(LATINIME_ENABLE_ASAN)
+    set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ASAN_FLAGS}")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_FLAGS}")
+    message(STATUS "LatinIME: AddressSanitizer (ASAN) enabled for memory debugging")
+endif()
+
 # 16 KB page alignment for compatibility with 16 KB page size devices (Android 15+)
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
 

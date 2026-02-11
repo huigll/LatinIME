@@ -2,6 +2,9 @@ plugins {
     id 'com.android.library'
 }
 
+def enableAsan = project.findProperty('latinime.enableAsan') ?: 'false'
+def asanEnabled = enableAsan.toString().toLowerCase() == 'true'
+
 android {
     namespace 'com.android.inputmethod.latin'
     compileSdk 34
@@ -19,6 +22,9 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17"
+                if (asanEnabled) {
+                    arguments "-DLATINIME_ENABLE_ASAN=ON"
+                }
             }
         }
         ndk {
