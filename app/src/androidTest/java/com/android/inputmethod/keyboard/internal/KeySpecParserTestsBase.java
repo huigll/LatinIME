@@ -69,6 +69,16 @@ abstract class KeySpecParserTestsBase extends AndroidTestCase {
         }
     }
 
+    /**
+     * Strips Bidi marks and replacement chars so label comparison works under pseudo-locale
+     * (e.g. en-rXC) where strings may contain U+200E, U+200F, U+061C, U+FFFD.
+     */
+    protected static String normalizeLabelForComparison(String label) {
+        if (label == null) return null;
+        return label.replace("\u200E", "").replace("\u200F", "").replace("\u061C", "")
+                .replace("\uFFFD", "").trim();
+    }
+
     // \U001d11e: MUSICAL SYMBOL G CLEF
     private static final String SURROGATE_PAIR1 = "\ud834\udd1e";
     private static final int SURROGATE_CODE1 = SURROGATE_PAIR1.codePointAt(0);
