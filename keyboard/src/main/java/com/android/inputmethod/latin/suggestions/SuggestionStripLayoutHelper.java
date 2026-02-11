@@ -63,6 +63,8 @@ final class SuggestionStripLayoutHelper {
     private static final int DEFAULT_SUGGESTIONS_COUNT_IN_STRIP = 3;
     private static final float DEFAULT_CENTER_SUGGESTION_PERCENTILE = 0.40f;
     private static final int DEFAULT_MAX_MORE_SUGGESTIONS_ROW = 2;
+    /** Minimum rows for the more-suggestions (secondary candidates) panel so it never shrinks to one line. */
+    private static final int MIN_MORE_SUGGESTIONS_ROWS = 2;
     private static final int PUNCTUATIONS_IN_STRIP = 5;
     private static final float MIN_TEXT_XSCALE = 0.70f;
 
@@ -173,8 +175,9 @@ final class SuggestionStripLayoutHelper {
             return;
         }
 
-        mMaxMoreSuggestionsRow = (remainingHeight - mMoreSuggestionsBottomGap)
+        final int rowsBySpace = (remainingHeight - mMoreSuggestionsBottomGap)
                 / mMoreSuggestionsRowHeight;
+        mMaxMoreSuggestionsRow = Math.max(MIN_MORE_SUGGESTIONS_ROWS, rowsBySpace);
     }
 
     private static Drawable getMoreSuggestionsHint(final Resources res, final float textSize,
