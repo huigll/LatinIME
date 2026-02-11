@@ -89,7 +89,8 @@ bool NgramContext::isNthPrevWordBeginningOfSentence(const size_t n) const {
         const DictionaryStructureWithBufferPolicy *const dictStructurePolicy,
         const int *const wordCodePoints, const int wordCodePointCount,
         const bool isBeginningOfSentence, const bool tryLowerCaseSearch) {
-    if (!dictStructurePolicy || !wordCodePoints || wordCodePointCount > MAX_WORD_LENGTH) {
+    if (!dictStructurePolicy || !wordCodePoints || wordCodePointCount <= 0
+            || wordCodePointCount > MAX_WORD_LENGTH) {
         return NOT_A_WORD_ID;
     }
     int codePoints[MAX_WORD_LENGTH];
