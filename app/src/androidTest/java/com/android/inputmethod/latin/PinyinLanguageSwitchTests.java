@@ -31,7 +31,9 @@ public class PinyinLanguageSwitchTests extends InputTestsBase {
         changeLanguage(LANGUAGE_ZH_CN);
         type("guanggu");
         runMessages();
-        pickSuggestionManually("光谷");
+        pickSuggestionManually("光");
+        runMessages();
+        pickSuggestionManually("谷");
         runMessages();
         assertEquals("光谷", mEditText.getText().toString().trim());
     }
@@ -43,7 +45,11 @@ public class PinyinLanguageSwitchTests extends InputTestsBase {
         changeLanguage(LANGUAGE_ZH_CN);
         type("kabite");
         runMessages();
-        pickSuggestionManually("卡比特");
+        pickSuggestionManually("卡");
+        runMessages();
+        pickSuggestionManually("比");
+        runMessages();
+        pickSuggestionManually("特");
         runMessages();
         assertEquals("卡比特", mEditText.getText().toString().trim());
     }
