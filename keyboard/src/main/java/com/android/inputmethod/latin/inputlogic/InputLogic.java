@@ -2345,6 +2345,12 @@ public final class InputLogic {
             // INPUT_STYLE_TYPING.
             performUpdateSuggestionStripSync(settingsValues, SuggestedWords.INPUT_STYLE_TYPING);
         }
+        // ASAN can make async suggestion computation lag behind the separator event. If we are
+        // still composing but auto-correction is not ready yet, force a sync refresh to avoid
+        // committing the raw typed word due to a race.
+        if (mWordComposer.isComposingWord() && mWordComposer.getAutoCorrectionOrNull() == null) {
+            performUpdateSuggestionStripSync(settingsValues, SuggestedWords.INPUT_STYLE_TYPING);
+        }
         final SuggestedWordInfo autoCorrectionOrNull = mWordComposer.getAutoCorrectionOrNull();
         final String typedWord = mWordComposer.getTypedWord();
         final String stringToCommit = (autoCorrectionOrNull != null)
