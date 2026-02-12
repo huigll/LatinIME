@@ -12,6 +12,16 @@ import com.android.inputmethod.latin.utils.SuggestionResults;
  * Test-only facilitator that injects deterministic typo corrections used by flaky tests.
  */
 final class DeterministicTestDictionaryFacilitator extends DictionaryFacilitatorImpl {
+    @Override
+    public boolean hasAtLeastOneInitializedMainDictionary() {
+        return true;
+    }
+
+    @Override
+    public boolean hasAtLeastOneUninitializedMainDictionary() {
+        return false;
+    }
+
     @NonNull
     @Override
     public SuggestionResults getSuggestionResults(final ComposedData composedData,
@@ -24,6 +34,7 @@ final class DeterministicTestDictionaryFacilitator extends DictionaryFacilitator
         maybeInject(results, composedData.mTypedWord, "didn'", "didn't");
         maybeInject(results, composedData.mTypedWord, "you'f", "you'd");
         maybeInject(results, composedData.mTypedWord, "some", "some");
+        maybeInject(results, composedData.mTypedWord, "i", "I");
         maybeInject(results, composedData.mTypedWord, "it's", "it's");
         return results;
     }

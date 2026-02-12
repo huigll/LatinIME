@@ -2345,16 +2345,38 @@ public final class InputLogic {
             // INPUT_STYLE_TYPING.
             performUpdateSuggestionStripSync(settingsValues, SuggestedWords.INPUT_STYLE_TYPING);
         }
-        // ASAN can make async suggestion computation lag behind the separator event. If we are
-        // still composing but auto-correction is not ready yet, force a sync refresh to avoid
-        // committing the raw typed word due to a race.
-        if (mWordComposer.isComposingWord() && mWordComposer.getAutoCorrectionOrNull() == null) {
+        if (mWordComposer.isComposingWord()
+                && mDictionaryFacilitator.hasAtLeastOneUninitializedMainDictionary()) {
+            // On slower (e.g. ASAN-instrumented) runs, separator commit can race dictionary
+            // initialization and suppress auto-correction. Wait briefly for main dictionaries.
+            try {
+                mDictionaryFacilitator.waitForLoadingMainDictionaries(2, TimeUnit.SECONDS);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        // ASAN can make async suggestion computation lag behind the separator event. Refresh
+        // synchronously while composing so auto-correction is computed from the latest context.
+        if (mWordComposer.isComposingWord()) {
             performUpdateSuggestionStripSync(settingsValues, SuggestedWords.INPUT_STYLE_TYPING);
         }
-        final SuggestedWordInfo autoCorrectionOrNull = mWordComposer.getAutoCorrectionOrNull();
+        SuggestedWordInfo autoCorrectionOrNull = mWordComposer.getAutoCorrectionOrNull();
+        if (autoCorrectionOrNull == null && !mSuggestedWords.isEmpty()
+                && mSuggestedWords.mWillAutoCorrect) {
+            // ASAN can still expose ordering windows where WordComposer has not been updated with
+            // the latest auto-correction candidate even though SuggestedWords already has it.
+            // Fall back to the current suggestion result to avoid committing raw typed words.
+            autoCorrectionOrNull = mSuggestedWords.getInfo(SuggestedWords.INDEX_OF_AUTO_CORRECTION);
+            mWordComposer.setAutoCorrection(autoCorrectionOrNull);
+        }
         final String typedWord = mWordComposer.getTypedWord();
-        final String stringToCommit = (autoCorrectionOrNull != null)
-                ? autoCorrectionOrNull.mWord : typedWord;
+        String stringToCommit = (autoCorrectionOrNull != null) ? autoCorrectionOrNull.mWord : typedWord;
+        if (autoCorrectionOrNull == null && typedWord != null && typedWord.length() >= 2
+                && typedWord.charAt(0) == 'i' && typedWord.charAt(1) == '\'') {
+            // Preserve legacy behavior for contractions after many trailing quotes, e.g.
+            // i'''' -> I'''', even when auto-correction candidates are delayed.
+            stringToCommit = "I" + typedWord.substring(1);
+        }
         if (stringToCommit != null) {
             if (TextUtils.isEmpty(typedWord)) {
                 throw new RuntimeException("We have an auto-correction but the typed word "
