@@ -214,9 +214,6 @@ int DynamicPtReadingHelper::getCodePointsAndReturnCodePointCount(const int maxCo
 
 int DynamicPtReadingHelper::getTerminalPtNodePositionOfWord(const int *const inWord,
         const size_t length, const bool forceLowerCaseSearch) {
-    if (length == 0) {
-        return NOT_A_DICT_POS;
-    }
     int searchCodePoints[length];
     for (size_t i = 0; i < length; ++i) {
         searchCodePoints[i] = forceLowerCaseSearch ? CharUtils::toLowerCase(inWord[i]) : inWord[i];
@@ -224,9 +221,7 @@ int DynamicPtReadingHelper::getTerminalPtNodePositionOfWord(const int *const inW
     while (!isEnd()) {
         const PtNodeParams ptNodeParams(getPtNodeParams());
         const int matchedCodePointCount = getPrevTotalCodePointCount();
-        if (matchedCodePointCount < 0
-                || static_cast<size_t>(matchedCodePointCount) >= length
-                || static_cast<size_t>(getTotalCodePointCount(ptNodeParams)) > length
+        if (getTotalCodePointCount(ptNodeParams) > length
                 || !isMatchedCodePoint(ptNodeParams, 0 /* index */,
                         searchCodePoints[matchedCodePointCount])) {
             // Current node has too many code points or its first code point is different from
