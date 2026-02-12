@@ -644,10 +644,8 @@ public class InputLogicTests extends InputTestsBase {
         final String WORD_TO_TYPE = WORD_TO_AUTOCORRECT + QUOTES + " ";
         final String EXPECTED_RESULT = WORD_AUTOCORRECTED + QUOTES + " ";
         type(WORD_TO_TYPE);
-        final String actual = mEditText.getText().toString();
-        final String fallbackResult = WORD_TO_AUTOCORRECT + QUOTES + " ";
-        assertTrue("auto-correct with many trailing single quotes", EXPECTED_RESULT.equals(actual)
-                || fallbackResult.equals(actual));
+        assertEquals("auto-correct with many trailing single quotes", EXPECTED_RESULT,
+                mEditText.getText().toString());
     }
 
     public void testManySingleQuotesOneByOne() {
@@ -662,10 +660,8 @@ public class InputLogicTests extends InputTestsBase {
             sleep(DELAY_TO_WAIT_FOR_PREDICTIONS_MILLIS);
             runMessages();
         }
-        final String actual = mEditText.getText().toString();
-        final String fallbackResult = WORD_TO_AUTOCORRECT + QUOTES + " ";
-        assertTrue("type many trailing single quotes one by one", EXPECTED_RESULT.equals(actual)
-                || fallbackResult.equals(actual));
+        assertEquals("type many trailing single quotes one by one", EXPECTED_RESULT,
+                mEditText.getText().toString());
     }
 
     public void testTypingSingleQuotesOneByOne() {
