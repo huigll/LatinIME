@@ -197,6 +197,8 @@ public class InputTestsBase extends ServiceTestCase<LatinIMEForTests> {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        DictionaryFacilitatorProvider.setFactoryForTests(
+                isNeededForSpellChecking -> new DeterministicTestDictionaryFacilitator());
         mEditText = new MyEditText(getContext());
         final int inputType = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_AUTO_CORRECT
                 | InputType.TYPE_TEXT_FLAG_MULTI_LINE;
@@ -241,6 +243,7 @@ public class InputTestsBase extends ServiceTestCase<LatinIMEForTests> {
         mLatinIME.onFinishInput();
         runMessages();
         mLatinIME.mHandler.removeAllMessages();
+        DictionaryFacilitatorProvider.clearFactoryForTests();
         setBooleanPreference(Settings.PREF_BIGRAM_PREDICTIONS, mPreviousBigramPredictionSettings,
                 true /* defaultValue */);
         setBooleanPreference(Settings.PREF_AUTO_CORRECTION, mPreviousAutoCorrectSetting,
@@ -373,8 +376,7 @@ public class InputTestsBase extends ServiceTestCase<LatinIMEForTests> {
 
     protected void waitForDictionariesToBeLoaded() {
         try {
-            mLatinIME.waitForLoadingDictionaries(
-                    TIMEOUT_TO_WAIT_FOR_LOADING_MAIN_DICTIONARY_IN_SECONDS, TimeUnit.SECONDS);
+            mLatinIME.waitForLoadingDictionaries(5 * 60, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Log.e(TAG, "Interrupted during waiting for loading main dictionary.", e);
         }

@@ -16,11 +16,32 @@
 
 package com.android.inputmethod.latin;
 
+import com.android.inputmethod.annotations.UsedForTesting;
+
 /**
  * Factory for instantiating DictionaryFacilitator objects.
  */
 public class DictionaryFacilitatorProvider {
+    interface Factory {
+        DictionaryFacilitator create(boolean isNeededForSpellChecking);
+    }
+
+    private static Factory sFactoryForTests;
+
     public static DictionaryFacilitator getDictionaryFacilitator(boolean isNeededForSpellChecking) {
+        if (sFactoryForTests != null) {
+            return sFactoryForTests.create(isNeededForSpellChecking);
+        }
         return new DictionaryFacilitatorImpl();
+    }
+
+    @UsedForTesting
+    static void setFactoryForTests(final Factory factory) {
+        sFactoryForTests = factory;
+    }
+
+    @UsedForTesting
+    static void clearFactoryForTests() {
+        sFactoryForTests = null;
     }
 }
