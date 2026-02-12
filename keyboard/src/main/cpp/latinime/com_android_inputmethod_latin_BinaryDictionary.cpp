@@ -196,23 +196,40 @@ static void latinime_BinaryDictionary_getSuggestions(JNIEnv *env, jclass clazz, 
     if (!traverseSession) {
         return;
     }
-    // Input values
-    int xCoordinates[inputSize];
-    int yCoordinates[inputSize];
-    int times[inputSize];
-    int pointerIds[inputSize];
     const jsize inputCodePointsLength = env->GetArrayLength(inputCodePointsArray);
-    int inputCodePoints[inputCodePointsLength];
-    env->GetIntArrayRegion(xCoordinatesArray, 0, inputSize, xCoordinates);
-    env->GetIntArrayRegion(yCoordinatesArray, 0, inputSize, yCoordinates);
-    env->GetIntArrayRegion(timesArray, 0, inputSize, times);
-    env->GetIntArrayRegion(pointerIdsArray, 0, inputSize, pointerIds);
-    env->GetIntArrayRegion(inputCodePointsArray, 0, inputCodePointsLength, inputCodePoints);
-
+    // Bounds validation to prevent dynamic-stack-buffer-overflow (ASan). inputSize must not
+    // exceed inputCodePointsLength because getSuggestions() reads inputCodePoints[0..inputSize-1].
+    if (inputSize < 0 || inputCodePointsLength < 0 || inputCodePointsLength < inputSize) {
+        AKLOGE("Invalid input size: inputSize=%d inputCodePointsLength=%d", inputSize,
+                inputCodePointsLength);
+        return;
+    }
+    static constexpr jsize MAX_GESTURE_INPUT_SIZE = 4096;
+    if (inputSize > MAX_GESTURE_INPUT_SIZE) {
+        AKLOGE("Input size too large: %d", inputSize);
+        return;
+    }
     const jsize numberOfOptions = env->GetArrayLength(suggestOptions);
-    int options[numberOfOptions];
-    env->GetIntArrayRegion(suggestOptions, 0, numberOfOptions, options);
-    SuggestOptions givenSuggestOptions(options, numberOfOptions);
+    if (numberOfOptions < 0 || numberOfOptions > 64) {
+        AKLOGE("Invalid numberOfOptions: %d", numberOfOptions);
+        return;
+    }
+    // Use heap allocation instead of VLAs to avoid ASan dynamic-stack-buffer-overflow and
+    // to keep stack usage bounded.
+    std::vector<int> xCoordinates(static_cast<size_t>(inputSize));
+    std::vector<int> yCoordinates(static_cast<size_t>(inputSize));
+    std::vector<int> times(static_cast<size_t>(inputSize));
+    std::vector<int> pointerIds(static_cast<size_t>(inputSize));
+    std::vector<int> inputCodePoints(static_cast<size_t>(inputCodePointsLength));
+    env->GetIntArrayRegion(xCoordinatesArray, 0, inputSize, xCoordinates.data());
+    env->GetIntArrayRegion(yCoordinatesArray, 0, inputSize, yCoordinates.data());
+    env->GetIntArrayRegion(timesArray, 0, inputSize, times.data());
+    env->GetIntArrayRegion(pointerIdsArray, 0, inputSize, pointerIds.data());
+    env->GetIntArrayRegion(inputCodePointsArray, 0, inputCodePointsLength, inputCodePoints.data());
+
+    std::vector<int> options(static_cast<size_t>(numberOfOptions));
+    env->GetIntArrayRegion(suggestOptions, 0, numberOfOptions, options.data());
+    SuggestOptions givenSuggestOptions(options.data(), numberOfOptions);
 
     // Output values
     /* By the way, let's check the output array length here to make sure */
@@ -246,8 +263,8 @@ static void latinime_BinaryDictionary_getSuggestions(JNIEnv *env, jclass clazz, 
             prevWordCodePointArrays, isBeginningOfSentenceArray, prevWordCount);
     if (givenSuggestOptions.isGesture() || inputSize > 0) {
         // TODO: Use SuggestionResults to return suggestions.
-        dictionary->getSuggestions(pInfo, traverseSession, xCoordinates, yCoordinates,
-                times, pointerIds, inputCodePoints, inputSize, &ngramContext,
+        dictionary->getSuggestions(pInfo, traverseSession, xCoordinates.data(), yCoordinates.data(),
+                times.data(), pointerIds.data(), inputCodePoints.data(), inputSize, &ngramContext,
                 &givenSuggestOptions, weightOfLangModelVsSpatialModel, &suggestionResults);
     } else {
         dictionary->getPredictions(&ngramContext, &suggestionResults);
@@ -265,9 +282,12 @@ static jint latinime_BinaryDictionary_getProbability(JNIEnv *env, jclass clazz, 
     Dictionary *dictionary = reinterpret_cast<Dictionary *>(dict);
     if (!dictionary) return NOT_A_PROBABILITY;
     const jsize codePointCount = env->GetArrayLength(word);
-    int codePoints[codePointCount];
-    env->GetIntArrayRegion(word, 0, codePointCount, codePoints);
-    return dictionary->getProbability(CodePointArrayView(codePoints, codePointCount));
+    if (codePointCount < 0 || codePointCount > MAX_WORD_LENGTH) {
+        return NOT_A_PROBABILITY;
+    }
+    std::vector<int> codePoints(static_cast<size_t>(codePointCount));
+    env->GetIntArrayRegion(word, 0, codePointCount, codePoints.data());
+    return dictionary->getProbability(CodePointArrayView(codePoints.data(), codePointCount));
 }
 
 static jint latinime_BinaryDictionary_getMaxProbabilityOfExactMatches(
@@ -275,10 +295,13 @@ static jint latinime_BinaryDictionary_getMaxProbabilityOfExactMatches(
     Dictionary *dictionary = reinterpret_cast<Dictionary *>(dict);
     if (!dictionary) return NOT_A_PROBABILITY;
     const jsize codePointCount = env->GetArrayLength(word);
-    int codePoints[codePointCount];
-    env->GetIntArrayRegion(word, 0, codePointCount, codePoints);
+    if (codePointCount < 0 || codePointCount > MAX_WORD_LENGTH) {
+        return NOT_A_PROBABILITY;
+    }
+    std::vector<int> codePoints(static_cast<size_t>(codePointCount));
+    env->GetIntArrayRegion(word, 0, codePointCount, codePoints.data());
     return dictionary->getMaxProbabilityOfExactMatches(
-            CodePointArrayView(codePoints, codePointCount));
+            CodePointArrayView(codePoints.data(), codePointCount));
 }
 
 static jint latinime_BinaryDictionary_getNgramProbability(JNIEnv *env, jclass clazz,
@@ -287,13 +310,16 @@ static jint latinime_BinaryDictionary_getNgramProbability(JNIEnv *env, jclass cl
     Dictionary *dictionary = reinterpret_cast<Dictionary *>(dict);
     if (!dictionary) return JNI_FALSE;
     const jsize wordLength = env->GetArrayLength(word);
-    int wordCodePoints[wordLength];
-    env->GetIntArrayRegion(word, 0, wordLength, wordCodePoints);
+    if (wordLength < 0 || wordLength > MAX_WORD_LENGTH) {
+        return JNI_FALSE;
+    }
+    std::vector<int> wordCodePoints(static_cast<size_t>(wordLength));
+    env->GetIntArrayRegion(word, 0, wordLength, wordCodePoints.data());
     const NgramContext ngramContext = JniDataUtils::constructNgramContext(env,
             prevWordCodePointArrays, isBeginningOfSentenceArray,
             env->GetArrayLength(prevWordCodePointArrays));
     return dictionary->getNgramProbability(&ngramContext,
-            CodePointArrayView(wordCodePoints, wordLength));
+            CodePointArrayView(wordCodePoints.data(), wordLength));
 }
 
 // Method to iterate all words in the dictionary for makedict.
@@ -309,7 +335,7 @@ static jint latinime_BinaryDictionary_getNextWord(JNIEnv *env, jclass clazz,
         ASSERT(false);
         return 0;
     }
-    int wordCodePoints[codePointBufSize];
+    int wordCodePoints[MAX_WORD_LENGTH];
     int wordCodePointCount = 0;
     const int nextToken = dictionary->getNextWordAndNextToken(token, wordCodePoints,
             &wordCodePointCount);
@@ -365,8 +391,11 @@ static bool latinime_BinaryDictionary_addUnigramEntry(JNIEnv *env, jclass clazz,
         return false;
     }
     jsize codePointCount = env->GetArrayLength(word);
-    int codePoints[codePointCount];
-    env->GetIntArrayRegion(word, 0, codePointCount, codePoints);
+    if (codePointCount < 0 || codePointCount > MAX_WORD_LENGTH) {
+        return false;
+    }
+    std::vector<int> codePoints(static_cast<size_t>(codePointCount));
+    env->GetIntArrayRegion(word, 0, codePointCount, codePoints.data());
     std::vector<UnigramProperty::ShortcutProperty> shortcuts;
     {
         std::vector<int> shortcutTargetCodePoints;
@@ -379,7 +408,7 @@ static bool latinime_BinaryDictionary_addUnigramEntry(JNIEnv *env, jclass clazz,
     const UnigramProperty unigramProperty(isBeginningOfSentence, isNotAWord,
             isPossiblyOffensive, probability, HistoricalInfo(timestamp, 0 /* level */,
             1 /* count */), std::move(shortcuts));
-    return dictionary->addUnigramEntry(CodePointArrayView(codePoints, codePointCount),
+    return dictionary->addUnigramEntry(CodePointArrayView(codePoints.data(), codePointCount),
             &unigramProperty);
 }
 
@@ -390,9 +419,12 @@ static bool latinime_BinaryDictionary_removeUnigramEntry(JNIEnv *env, jclass cla
         return false;
     }
     jsize codePointCount = env->GetArrayLength(word);
-    int codePoints[codePointCount];
-    env->GetIntArrayRegion(word, 0, codePointCount, codePoints);
-    return dictionary->removeUnigramEntry(CodePointArrayView(codePoints, codePointCount));
+    if (codePointCount < 0 || codePointCount > MAX_WORD_LENGTH) {
+        return false;
+    }
+    std::vector<int> codePoints(static_cast<size_t>(codePointCount));
+    env->GetIntArrayRegion(word, 0, codePointCount, codePoints.data());
+    return dictionary->removeUnigramEntry(CodePointArrayView(codePoints.data(), codePointCount));
 }
 
 static bool latinime_BinaryDictionary_addNgramEntry(JNIEnv *env, jclass clazz, jlong dict,
@@ -406,11 +438,14 @@ static bool latinime_BinaryDictionary_addNgramEntry(JNIEnv *env, jclass clazz, j
             prevWordCodePointArrays, isBeginningOfSentenceArray,
             env->GetArrayLength(prevWordCodePointArrays));
     jsize wordLength = env->GetArrayLength(word);
-    int wordCodePoints[wordLength];
-    env->GetIntArrayRegion(word, 0, wordLength, wordCodePoints);
+    if (wordLength < 0 || wordLength > MAX_WORD_LENGTH) {
+        return false;
+    }
+    std::vector<int> wordCodePoints(static_cast<size_t>(wordLength));
+    env->GetIntArrayRegion(word, 0, wordLength, wordCodePoints.data());
     // Use 1 for count to indicate the ngram has inputted.
     const NgramProperty ngramProperty(ngramContext,
-            CodePointArrayView(wordCodePoints, wordLength).toVector(),
+            CodePointArrayView(wordCodePoints.data(), wordLength).toVector(),
             probability, HistoricalInfo(timestamp, 0 /* level */, 1 /* count */));
     return dictionary->addNgramEntry(&ngramProperty);
 }
@@ -426,10 +461,13 @@ static bool latinime_BinaryDictionary_removeNgramEntry(JNIEnv *env, jclass clazz
             prevWordCodePointArrays, isBeginningOfSentenceArray,
             env->GetArrayLength(prevWordCodePointArrays));
     jsize codePointCount = env->GetArrayLength(word);
-    int wordCodePoints[codePointCount];
-    env->GetIntArrayRegion(word, 0, codePointCount, wordCodePoints);
+    if (codePointCount < 0 || codePointCount > MAX_WORD_LENGTH) {
+        return false;
+    }
+    std::vector<int> wordCodePoints(static_cast<size_t>(codePointCount));
+    env->GetIntArrayRegion(word, 0, codePointCount, wordCodePoints.data());
     return dictionary->removeNgramEntry(&ngramContext,
-            CodePointArrayView(wordCodePoints, codePointCount));
+            CodePointArrayView(wordCodePoints.data(), codePointCount));
 }
 
 static bool latinime_BinaryDictionary_updateEntriesForWordWithNgramContext(JNIEnv *env,
@@ -444,11 +482,14 @@ static bool latinime_BinaryDictionary_updateEntriesForWordWithNgramContext(JNIEn
             prevWordCodePointArrays, isBeginningOfSentenceArray,
             env->GetArrayLength(prevWordCodePointArrays));
     jsize codePointCount = env->GetArrayLength(word);
-    int wordCodePoints[codePointCount];
-    env->GetIntArrayRegion(word, 0, codePointCount, wordCodePoints);
+    if (codePointCount < 0 || codePointCount > MAX_WORD_LENGTH) {
+        return false;
+    }
+    std::vector<int> wordCodePoints(static_cast<size_t>(codePointCount));
+    env->GetIntArrayRegion(word, 0, codePointCount, wordCodePoints.data());
     const HistoricalInfo historicalInfo(timestamp, 0 /* level */, count);
     return dictionary->updateEntriesForWordWithNgramContext(&ngramContext,
-            CodePointArrayView(wordCodePoints, codePointCount), isValidWord == JNI_TRUE,
+            CodePointArrayView(wordCodePoints.data(), codePointCount), isValidWord == JNI_TRUE,
             historicalInfo);
 }
 
@@ -481,8 +522,13 @@ static int latinime_BinaryDictionary_updateEntriesForInputEvents(JNIEnv *env, jc
         jintArray targetWord = static_cast<jintArray>(
                 env->GetObjectField(inputEvent, targetWordFieldId));
         jsize wordLength = env->GetArrayLength(targetWord);
-        int wordCodePoints[wordLength];
-        env->GetIntArrayRegion(targetWord, 0, wordLength, wordCodePoints);
+        if (wordLength < 0 || wordLength > MAX_WORD_LENGTH) {
+            env->DeleteLocalRef(targetWord);
+            env->DeleteLocalRef(inputEvent);
+            return i;
+        }
+        std::vector<int> wordCodePoints(static_cast<size_t>(wordLength));
+        env->GetIntArrayRegion(targetWord, 0, wordLength, wordCodePoints.data());
         env->DeleteLocalRef(targetWord);
 
         jint prevWordCount = env->GetIntField(inputEvent, prevWordCountFieldId);
@@ -496,7 +542,7 @@ static int latinime_BinaryDictionary_updateEntriesForInputEvents(JNIEnv *env, jc
                 prevWordArray, isPrevWordBeginningOfSentenceArray, prevWordCount);
         // Use 1 for count to indicate the word has inputted.
         dictionary->updateEntriesForWordWithNgramContext(&ngramContext,
-                CodePointArrayView(wordCodePoints, wordLength), isValid,
+                CodePointArrayView(wordCodePoints.data(), wordLength), isValid,
                 HistoricalInfo(timestamp, 0 /* level */, 1 /* count */));
         if (dictionary->needsToRunGC(true /* mindsBlockByGC */)) {
             return i + 1;

@@ -16,6 +16,9 @@
 
 #include "dictionary/structure/pt_common/dynamic_pt_reading_helper.h"
 
+#include <vector>
+
+#include "defines.h"
 #include "dictionary/structure/pt_common/pt_node_array_reader.h"
 #include "utils/char_utils.h"
 
@@ -177,9 +180,13 @@ bool DynamicPtReadingHelper::traverseAllPtNodesInPtNodeArrayLevelPreorderDepthFi
 
 int DynamicPtReadingHelper::getCodePointsAndReturnCodePointCount(const int maxCodePointCount,
         int *const outCodePoints) {
+    if (maxCodePointCount <= 0 || maxCodePointCount > MAX_WORD_LENGTH) {
+        return 0;
+    }
     // This method traverses parent nodes from the terminal by following parent pointers; thus,
     // node code points are stored in the buffer in the reverse order.
-    int reverseCodePoints[maxCodePointCount];
+    // Use heap allocation to avoid ASan dynamic-stack-buffer-overflow from VLA.
+    std::vector<int> reverseCodePoints(static_cast<size_t>(maxCodePointCount));
     const PtNodeParams terminalPtNodeParams(getPtNodeParams());
     // First, read the terminal node and get its probability.
     if (!isValidTerminalNode(terminalPtNodeParams)) {
@@ -197,7 +204,7 @@ int DynamicPtReadingHelper::getCodePointsAndReturnCodePointCount(const int maxCo
         }
         // Store node code points to buffer in the reverse order.
         fetchMergedNodeCodePointsInReverseOrder(ptNodeParams, getPrevTotalCodePointCount(),
-                reverseCodePoints);
+                reverseCodePoints.data());
         // Follow parent node toward the root node.
         readParentNode(ptNodeParams);
     }
@@ -207,23 +214,26 @@ int DynamicPtReadingHelper::getCodePointsAndReturnCodePointCount(const int maxCo
     }
     // Reverse the stored code points to output them.
     for (int i = 0; i < totalCodePointCount; ++i) {
-        outCodePoints[i] = reverseCodePoints[totalCodePointCount - i - 1];
+        outCodePoints[i] = reverseCodePoints[static_cast<size_t>(totalCodePointCount - i - 1)];
     }
     return totalCodePointCount;
 }
 
 int DynamicPtReadingHelper::getTerminalPtNodePositionOfWord(const int *const inWord,
         const size_t length, const bool forceLowerCaseSearch) {
-    int searchCodePoints[length];
+    if (length == 0 || length > static_cast<size_t>(MAX_WORD_LENGTH)) {
+        return NOT_A_DICT_POS;
+    }
+    std::vector<int> searchCodePoints(length);
     for (size_t i = 0; i < length; ++i) {
         searchCodePoints[i] = forceLowerCaseSearch ? CharUtils::toLowerCase(inWord[i]) : inWord[i];
     }
     while (!isEnd()) {
         const PtNodeParams ptNodeParams(getPtNodeParams());
         const int matchedCodePointCount = getPrevTotalCodePointCount();
-        if (getTotalCodePointCount(ptNodeParams) > length
+        if (getTotalCodePointCount(ptNodeParams) > static_cast<int>(length)
                 || !isMatchedCodePoint(ptNodeParams, 0 /* index */,
-                        searchCodePoints[matchedCodePointCount])) {
+                        searchCodePoints[static_cast<size_t>(matchedCodePointCount)])) {
             // Current node has too many code points or its first code point is different from
             // target code point. Skip this node and read the next sibling node.
             readNextSiblingNode(ptNodeParams);
@@ -232,13 +242,14 @@ int DynamicPtReadingHelper::getTerminalPtNodePositionOfWord(const int *const inW
         // Check following merged node code points.
         const int nodeCodePointCount = ptNodeParams.getCodePointCount();
         for (int j = 1; j < nodeCodePointCount; ++j) {
-            if (!isMatchedCodePoint(ptNodeParams, j, searchCodePoints[matchedCodePointCount + j])) {
+            if (!isMatchedCodePoint(ptNodeParams, j,
+                    searchCodePoints[static_cast<size_t>(matchedCodePointCount + j)])) {
                 // Different code point is found. The given word is not included in the dictionary.
                 return NOT_A_DICT_POS;
             }
         }
         // All characters are matched.
-        if (length == getTotalCodePointCount(ptNodeParams)) {
+        if (static_cast<int>(length) == getTotalCodePointCount(ptNodeParams)) {
             if (!ptNodeParams.isTerminal()) {
                 return NOT_A_DICT_POS;
             }
